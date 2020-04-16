@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringJUnitConfig
 @DataJpaTest
-public class UserRoleRepositoryIntegrationTest {
+public class UserRoleRepositoryTest {
 
     @Autowired
     private TestEntityManager testEntityManager;

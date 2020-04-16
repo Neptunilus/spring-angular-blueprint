@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringJUnitConfig
 @DataJpaTest
-public class CategoryRepositoryIntegrationTest {
+public class CategoryRepositoryTest {
 
     @Autowired
     private TestEntityManager testEntityManager;
