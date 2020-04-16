@@ -10,7 +10,7 @@
         <version>2.2.6.RELEASE</version>
     </parent>
 
-    <groupId>neptunilus.spring-angular-blueprint</groupId>
+    <groupId>neptunilus.blueprint.sa</groupId>
     <artifactId>parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
