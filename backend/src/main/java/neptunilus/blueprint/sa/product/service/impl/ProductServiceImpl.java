@@ -77,10 +77,11 @@ public class ProductServiceImpl implements ProductService {
     public void update(final String name, final Product update) throws ProductNotFoundException {
         Assert.notNull(update, "new data must not be null");
 
+        final Product existingProduct = get(name);
+
         final Category newCategory = update.getCategory() != null ?
                 this.categoryService.get(update.getCategory().getName()) : null;
 
-        final Product existingProduct = get(name);
         existingProduct.setName(update.getName());
         existingProduct.setCategory(newCategory);
 
