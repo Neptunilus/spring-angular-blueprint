@@ -114,6 +114,28 @@ public class ProductRepositoryTest {
     }
 
     @Test
+    public void testFindByNameContainingIgnoreCaseAndCategory_ShouldFindTheCorrectOnes() {
+        Category category = new Category("category");
+        this.testEntityManager.persist(category);
+
+        Product productToFind = new Product("myProduct1", category);
+        this.testEntityManager.persist(productToFind);
+
+        Product productNotToFind1 = new Product("myProduct2");
+        this.testEntityManager.persist(productNotToFind1);
+
+        Product productNotToFind2 = new Product("SomethingElse", category);
+        this.testEntityManager.persist(productNotToFind2);
+
+        this.testEntityManager.flush();
+        this.testEntityManager.clear();
+
+        Page<Product> products = this.productRepository.findByNameContainingIgnoreCaseAndCategory("product", category, null);
+        assertThat(products).hasSize(1);
+        assertThat(products).extracting("name").containsExactly("myProduct1");
+    }
+
+    @Test
     public void testInsertInvalid_ShouldThrowException() {
         Product invalidProduct = new Product("");
 

@@ -40,4 +40,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @return The products
      */
     Page<Product> findByCategory(Category category, Pageable pageable);
+
+    /**
+     * Returns all {@link Product}s containing the search in name and belonging to a specific {@link Category}.
+     *
+     * @param search   The search
+     * @param category The category
+     * @param pageable The pagination information
+     * @return The products
+     */
+    Page<Product> findByNameContainingIgnoreCaseAndCategory(String search, Category category, Pageable pageable);
+
 }
