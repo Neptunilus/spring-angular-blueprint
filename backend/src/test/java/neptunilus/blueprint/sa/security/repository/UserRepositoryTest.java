@@ -48,7 +48,6 @@ public class UserRepositoryTest {
         assertThat(user).get().extracting("email").isEqualTo("test@test.xy");
         assertThat(user).get().extracting("password").isEqualTo("abc");
         assertThat(user).get().extracting("role").extracting("name").isEqualTo("admin");
-        assertThat(user).get().extracting("role").extracting("authorities").asInstanceOf(InstanceOfAssertFactories.ITERABLE).containsExactlyInAnyOrder(Authority.CREATE_CATEGORY, Authority.CREATE_PRODUCT);
     }
 
     @Test
