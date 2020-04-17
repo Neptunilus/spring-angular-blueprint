@@ -41,7 +41,7 @@ public class User {
      * The role of the user.
      */
     @NotNull
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "role_id")
     private UserRole role;
 
