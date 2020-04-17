@@ -81,10 +81,12 @@ public class ProductRepositoryTest {
     @Test
     public void testFindByCategory_ShouldFind() {
         Category categoryToFind = new Category("category1");
+        this.testEntityManager.persist(categoryToFind);
         Product productToFind = new Product("myProduct1", categoryToFind);
         this.testEntityManager.persist(productToFind);
 
         Category categoryNotToFind = new Category("category2");
+        this.testEntityManager.persist(categoryNotToFind);
         Product productNotToFind = new Product("myProduct2", categoryNotToFind);
         this.testEntityManager.persist(productNotToFind);
 
@@ -103,6 +105,7 @@ public class ProductRepositoryTest {
         this.testEntityManager.persist(categoryWithoutProduct);
 
         Category categoryNotToFind = new Category("category2");
+        this.testEntityManager.persist(categoryNotToFind);
         Product productNotToFind = new Product("myProduct2", categoryNotToFind);
         this.testEntityManager.persist(productNotToFind);
 

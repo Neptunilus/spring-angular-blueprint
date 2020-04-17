@@ -33,6 +33,7 @@ public class UserRepositoryTest {
     @Test
     public void testFindOneByEmail_ShouldFind() {
         UserRole userRole = new UserRole("admin", Set.of(Authority.CREATE_CATEGORY, Authority.CREATE_PRODUCT));
+        this.testEntityManager.persist(userRole);
         User userToFind = new User("test@test.xy", "abc", userRole);
         this.testEntityManager.persist(userToFind);
 
