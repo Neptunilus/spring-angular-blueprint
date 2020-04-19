@@ -6,6 +6,7 @@ import neptunilus.blueprint.sa.security.repository.UserRoleRepository;
 import neptunilus.blueprint.sa.security.service.UserRoleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 /**
  * Concrete implementation of {@link UserRoleService}.
  */
+@Service
 public class UserRoleServiceImpl implements UserRoleService {
 
     private final UserRoleRepository userRoleRepository;

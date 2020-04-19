@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -22,6 +23,7 @@ import java.util.UUID;
 /**
  * Concrete implementation of {@link UserService}.
  */
+@Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

@@ -10,6 +10,7 @@ import neptunilus.blueprint.sa.product.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
 /**
  * Concrete implementation of {@link ProductService}.
  */
+@Service
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
