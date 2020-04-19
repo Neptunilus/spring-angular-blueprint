@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 /**
  * Service for handling with {@link Product}s.
  */
@@ -18,20 +20,21 @@ public interface ProductService {
      * Returns the available products.
      *
      * @param search   The (optional) search string for product name
+     * @param strict   Flag, if the name should be exactly the same
      * @param category The (optional) category of the product
      * @param pageable The pagination information
      * @return The products
      */
-    Page<Product> find(String search, Category category, Pageable pageable);
+    Page<Product> find(String search, boolean strict, Category category, Pageable pageable);
 
     /**
-     * Returns the product with the given name.
+     * Returns the product with the given id.
      *
-     * @param name The name
+     * @param id The id
      * @return The product
-     * @throws ProductNotFoundException If a product with the given name is not found
+     * @throws ProductNotFoundException If a product with the given id is not found
      */
-    Product get(String name) throws ProductNotFoundException;
+    Product get(UUID id) throws ProductNotFoundException;
 
     /**
      * Creates a new product.
@@ -44,17 +47,18 @@ public interface ProductService {
     /**
      * Updates an existing product.
      *
-     * @param name   The name of the existing product to update
+     * @param id     The id of the existing product to update
      * @param update The new data for the product
-     * @throws ProductNotFoundException If a product with the given name is not found
+     * @throws ProductNotFoundException      If a product with the given id is not found
+     * @throws ProductAlreadyExistsException If a product with the new name is already there
      */
-    void update(String name, Product update) throws ProductNotFoundException;
+    void update(UUID id, Product update) throws ProductNotFoundException, ProductAlreadyExistsException;
 
     /**
      * Deletes an existing product (if in the system).
      *
-     * @param name The name of the product to remove
+     * @param id The id of the product to remove
      */
-    void delete(String name);
+    void delete(UUID id);
 
 }

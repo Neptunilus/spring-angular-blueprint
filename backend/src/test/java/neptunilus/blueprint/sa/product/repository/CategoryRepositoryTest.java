@@ -11,6 +11,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.validation.ConstraintViolationException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,6 +28,28 @@ public class CategoryRepositoryTest {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Test
+    public void testFindById_ShouldFind() {
+        Category categoryToFind = new Category("myCategory");
+        UUID idToFind = this.testEntityManager.persist(categoryToFind).getId();
+
+        Category categoryNotToFind = new Category("myOtherCategory");
+        this.testEntityManager.persist(categoryNotToFind);
+
+        this.testEntityManager.flush();
+        this.testEntityManager.clear();
+
+        Optional<Category> category = this.categoryRepository.findById(idToFind);
+        assertThat(category).isPresent();
+        assertThat(category).get().extracting("name").isEqualTo("myCategory");
+    }
+
+    @Test
+    public void testFindOneById_ShouldNotFind() {
+        Optional<Category> category = this.categoryRepository.findById(UUID.randomUUID());
+        assertThat(category).isNotPresent();
+    }
 
     @Test
     public void testFindOneByName_ShouldFind() {

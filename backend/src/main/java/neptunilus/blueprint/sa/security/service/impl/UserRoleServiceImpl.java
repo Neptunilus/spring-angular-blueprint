@@ -7,8 +7,10 @@ import neptunilus.blueprint.sa.security.service.UserRoleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Concrete implementation of {@link UserRoleService}.
@@ -29,12 +31,10 @@ public class UserRoleServiceImpl implements UserRoleService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserRole get(final String name) throws UserRoleNotFoundException {
-        if (name == null || name.isBlank()) {
-            throw new UserRoleNotFoundException("no user role with empty name possible");
-        }
+    public UserRole get(final UUID id) throws UserRoleNotFoundException {
+        Assert.notNull(id, "id must not be null");
 
-        final Optional<UserRole> userRole = this.userRoleRepository.findOneByName(name);
-        return userRole.orElseThrow(() -> new UserRoleNotFoundException(String.format("no user role found with name '%s'", name)));
+        final Optional<UserRole> userRole = this.userRoleRepository.findById(id);
+        return userRole.orElseThrow(() -> new UserRoleNotFoundException(String.format("no user role found with id '%s'", id)));
     }
 }

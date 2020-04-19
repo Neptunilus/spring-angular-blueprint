@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 /**
  * Service for handling with {@link Category}s.
  */
@@ -17,19 +19,20 @@ public interface CategoryService {
      * Returns the available categories.
      *
      * @param search   The (optional) search string for category name.
+     * @param strict   Flag, if the name should be exactly the same
      * @param pageable The pagination information
      * @return The categories
      */
-    Page<Category> find(String search, Pageable pageable);
+    Page<Category> find(String search, boolean strict, Pageable pageable);
 
     /**
-     * Returns the category with the given name.
+     * Returns the category with the given id.
      *
-     * @param name The name
+     * @param id The id
      * @return The category
-     * @throws CategoryNotFoundException If a category with the given name is not found
+     * @throws CategoryNotFoundException If a category with the given id is not found
      */
-    Category get(String name) throws CategoryNotFoundException;
+    Category get(UUID id) throws CategoryNotFoundException;
 
     /**
      * Creates a new category.
@@ -42,17 +45,18 @@ public interface CategoryService {
     /**
      * Updates an existing category.
      *
-     * @param name   The name of the existing category to update
+     * @param id     The id of the existing category to update
      * @param update The new data for the category
-     * @throws CategoryNotFoundException If a category with the given name is not found
+     * @throws CategoryNotFoundException      If a category with the given id is not found
+     * @throws CategoryAlreadyExistsException If a category with the new name is already there
      */
-    void update(String name, Category update) throws CategoryNotFoundException;
+    void update(UUID id, Category update) throws CategoryNotFoundException, CategoryAlreadyExistsException;
 
     /**
      * Deletes an existing category (if in the system).
      *
-     * @param name The name of the category to remove
+     * @param id The id of the category to remove
      */
-    void delete(String name);
+    void delete(UUID id);
 
 }

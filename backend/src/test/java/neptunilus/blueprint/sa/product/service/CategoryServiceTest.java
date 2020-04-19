@@ -10,9 +10,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -31,58 +35,109 @@ public class CategoryServiceTest {
     }
 
     @Test
-    public void testFind_shouldFindSomeWithSearch() {
-        final String search = "search";
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindSomeWithSearchAndWithStrict() {
+        String search = "search";
+        boolean strict = true;
+        Pageable pageable = Pageable.unpaged();
 
-        this.categoryService.find(search, pageable);
+        Category existingCategory = new Category("myCategory");
+        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findOneByName(search);
+
+        Page<Category> page = this.categoryService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myCategory");
+
+        verify(this.categoryRepository).findOneByName(search);
+        verifyNoMoreInteractions(this.categoryRepository);
+    }
+
+    @Test
+    public void testFind_shouldFindSomeWithSearchAndWithoutStrict() {
+        String search = "search";
+        boolean strict = false;
+        Pageable pageable = Pageable.unpaged();
+
+        Category existingCategory = new Category("myCategory");
+        doReturn(new PageImpl<>(Collections.singletonList(existingCategory))).when(this.categoryRepository).findByNameContainingIgnoreCase(search, pageable);
+
+        Page<Category> page = this.categoryService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myCategory");
 
         verify(this.categoryRepository).findByNameContainingIgnoreCase(search, pageable);
         verifyNoMoreInteractions(this.categoryRepository);
     }
 
     @Test
-    public void testFind_shouldFindAllWithoutSearch() {
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindAllWithoutSearchAndWithStrict() {
+        String search = null;
+        boolean strict = true;
+        Pageable pageable = Pageable.unpaged();
 
-        this.categoryService.find(null, pageable);
+        Category existingCategory = new Category("myCategory");
+        doReturn(new PageImpl<>(Collections.singletonList(existingCategory))).when(this.categoryRepository).findAll(pageable);
+
+        Page<Category> page = this.categoryService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myCategory");
 
         verify(this.categoryRepository).findAll(pageable);
         verifyNoMoreInteractions(this.categoryRepository);
     }
 
     @Test
-    public void testGet_ShouldThrowExceptionIfNameNotProvided() {
-        assertThatExceptionOfType(CategoryNotFoundException.class)
+    public void testFind_shouldFindAllWithoutSearchAndWithoutStrict() {
+        String search = null;
+        boolean strict = false;
+        Pageable pageable = Pageable.unpaged();
+
+        Category existingCategory = new Category("myCategory");
+        doReturn(new PageImpl<>(Collections.singletonList(existingCategory))).when(this.categoryRepository).findAll(pageable);
+
+        Page<Category> page = this.categoryService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myCategory");
+
+        verify(this.categoryRepository).findAll(pageable);
+        verifyNoMoreInteractions(this.categoryRepository);
+    }
+
+    @Test
+    public void testGet_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(() -> this.categoryService.get(null))
-                .withMessageContainingAll("empty", "name");
+                .withMessageContainingAll("id", "null");
         verifyNoInteractions(this.categoryRepository);
     }
 
     @Test
     public void testGet_ShouldThrowExceptionIfCategoryNotFound() {
-        final String name = "myCategory";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.categoryRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.categoryRepository).findById(id);
 
         assertThatExceptionOfType(CategoryNotFoundException.class)
-                .isThrownBy(() -> this.categoryService.get(name))
-                .withMessageContainingAll("no", "category", name);
-        verify(this.categoryRepository).findOneByName(name);
+                .isThrownBy(() -> this.categoryService.get(id))
+                .withMessageContainingAll("no", "category", id.toString());
+        verify(this.categoryRepository).findById(id);
         verifyNoMoreInteractions(this.categoryRepository);
     }
 
     @Test
     public void testGet_ShouldReturnCategoryIfFound() {
-        final String name = "myCategory";
-        final Category category = new Category(name);
+        UUID id = UUID.randomUUID();
+        Category category = new Category("myCategory");
 
-        doReturn(Optional.of(category)).when(this.categoryRepository).findOneByName(name);
+        doReturn(Optional.of(category)).when(this.categoryRepository).findById(id);
 
-        Category categoryReturned = this.categoryService.get(name);
+        Category categoryReturned = this.categoryService.get(id);
         assertThat(categoryReturned).isSameAs(category);
 
-        verify(this.categoryRepository).findOneByName(name);
+        verify(this.categoryRepository).findById(id);
         verifyNoMoreInteractions(this.categoryRepository);
     }
 
@@ -96,9 +151,9 @@ public class CategoryServiceTest {
 
     @Test
     public void testCreate_ShouldThrowExceptionIfCategoryAlreadyExists() {
-        final String name = "myCategory";
-        final Category existingCategory = new Category(name);
-        final Category newCategory = new Category(name);
+        String name = "myCategory";
+        Category existingCategory = new Category(name);
+        Category newCategory = new Category(name);
 
         doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findOneByName(name);
 
@@ -111,10 +166,10 @@ public class CategoryServiceTest {
 
     @Test
     public void testCreate_ShouldSaveNewCategoryIfNotAlreadyExists() {
-        final ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
+        ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
 
-        final String name = "myCategory";
-        final Category newCategory = new Category(name);
+        String name = "myCategory";
+        Category newCategory = new Category(name);
 
         doReturn(Optional.empty()).when(this.categoryRepository).findOneByName(name);
 
@@ -127,48 +182,73 @@ public class CategoryServiceTest {
     }
 
     @Test
+    public void testUpdate_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> this.categoryService.update(null, new Category(null)))
+                .withMessageContainingAll("id", "null");
+        verifyNoInteractions(this.categoryRepository);
+    }
+
+    @Test
     public void testUpdate_ShouldThrowExceptionIfUpdateNotProvided() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> this.categoryService.update("category", null))
+                .isThrownBy(() -> this.categoryService.update(UUID.randomUUID(), null))
                 .withMessageContainingAll("data", "null");
         verifyNoInteractions(this.categoryRepository);
     }
 
     @Test
-    public void testUpdate_ShouldThrowExceptionIfNameNotProvided() {
-        assertThatExceptionOfType(CategoryNotFoundException.class)
-                .isThrownBy(() -> this.categoryService.update("", new Category(null)))
-                .withMessageContainingAll("name", "empty");
-        verifyNoInteractions(this.categoryRepository);
-    }
-
-    @Test
     public void testUpdate_ShouldThrowExceptionIfCategoryNotFound() {
-        final String name = "myCategory";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.categoryRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.categoryRepository).findById(id);
 
         assertThatExceptionOfType(CategoryNotFoundException.class)
-                .isThrownBy(() -> this.categoryService.update(name, new Category(null)))
-                .withMessageContainingAll("no", "category", name);
-        verify(this.categoryRepository).findOneByName(name);
+                .isThrownBy(() -> this.categoryService.update(id, new Category(null)))
+                .withMessageContainingAll("no", "category", id.toString());
+        verify(this.categoryRepository).findById(id);
         verifyNoMoreInteractions(this.categoryRepository);
     }
 
     @Test
-    public void testUpdate_ShouldTriggerUpdateIfCategoryExists() {
-        final ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
+    public void testUpdate_ShouldThrowExceptionIfNewCategoryNameAlreadyExists() {
+        UUID id = UUID.randomUUID();
+        String name = "myCategory";
+        String newName = "myNewCategory";
 
-        final String name = "myCategory";
-        final String newName = "newName";
-        final Category existingCategory = new Category(name);
-        final Category update = new Category(newName);
+        Category existingCategory = new Category(name);
+        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findById(id);
 
-        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findOneByName(name);
+        Category conflictingCategory = new Category(newName);
+        doReturn(Optional.of(conflictingCategory)).when(this.categoryRepository).findOneByName(newName);
 
-        this.categoryService.update(name, update);
+        Category update = new Category(newName);
 
-        verify(this.categoryRepository).findOneByName(name);
+        assertThatExceptionOfType(CategoryAlreadyExistsException.class)
+                .isThrownBy(() -> this.categoryService.update(id, update))
+                .withMessageContainingAll("category", "exists", newName);
+        verify(this.categoryRepository).findById(id);
+        verify(this.categoryRepository).findOneByName(newName);
+        verifyNoMoreInteractions(this.categoryRepository);
+    }
+
+    @Test
+    public void testUpdate_ShouldTriggerUpdateIfCategoryExistsWithNewName() {
+        ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
+
+        UUID id = UUID.randomUUID();
+        String name = "myCategory";
+        String newName = "newName";
+        Category existingCategory = new Category(name);
+        Category update = new Category(newName);
+
+        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findById(id);
+        doReturn(Optional.empty()).when(this.categoryRepository).findOneByName(newName);
+
+        this.categoryService.update(id, update);
+
+        verify(this.categoryRepository).findById(id);
+        verify(this.categoryRepository).findOneByName(newName);
         verify(this.categoryRepository).save(categoryCaptor.capture());
         assertThat(categoryCaptor.getValue()).isSameAs(existingCategory);
         assertThat(categoryCaptor.getValue()).extracting("name").isEqualTo(newName);
@@ -176,33 +256,53 @@ public class CategoryServiceTest {
     }
 
     @Test
-    public void testDelete_ShouldDoNothingIfNameNotProvided() {
+    public void testUpdate_ShouldTriggerUpdateIfCategoryExistsWithoutNewName() {
+        ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
+
+        UUID id = UUID.randomUUID();
+        String name = "myCategory";
+        Category existingCategory = new Category(name);
+        Category update = new Category(name);
+
+        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findById(id);
+
+        this.categoryService.update(id, update);
+
+        verify(this.categoryRepository).findById(id);
+        verify(this.categoryRepository).save(categoryCaptor.capture());
+        assertThat(categoryCaptor.getValue()).isSameAs(existingCategory);
+        assertThat(categoryCaptor.getValue()).extracting("name").isEqualTo(name);
+        verifyNoMoreInteractions(this.categoryRepository);
+    }
+
+    @Test
+    public void testDelete_ShouldDoNothingIfIdNotProvided() {
         this.categoryService.delete(null);
         verifyNoInteractions(this.categoryRepository);
     }
 
     @Test
     public void testDelete_ShouldDoNothingIfCategoryNotExists() {
-        final String name = "myCategory";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.categoryRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.categoryRepository).findById(id);
 
-        this.categoryService.delete(name);
+        this.categoryService.delete(id);
 
-        verify(this.categoryRepository).findOneByName(name);
+        verify(this.categoryRepository).findById(id);
         verifyNoMoreInteractions(this.categoryRepository);
     }
 
     @Test
     public void testDelete_ShouldDeleteCategoryIfExists() {
-        final String name = "myCategory";
-        final Category existingCategory = new Category(name);
+        UUID id = UUID.randomUUID();
+        Category existingCategory = new Category("myCategory");
 
-        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findOneByName(name);
+        doReturn(Optional.of(existingCategory)).when(this.categoryRepository).findById(id);
 
-        this.categoryService.delete(name);
+        this.categoryService.delete(id);
 
-        verify(this.categoryRepository).findOneByName(name);
+        verify(this.categoryRepository).findById(id);
         verify(this.categoryRepository).delete(same(existingCategory));
         verifyNoMoreInteractions(this.categoryRepository);
     }

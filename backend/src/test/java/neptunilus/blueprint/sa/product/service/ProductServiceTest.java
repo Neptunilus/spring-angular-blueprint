@@ -11,9 +11,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -34,89 +38,218 @@ public class ProductServiceTest {
     }
 
     @Test
-    public void testFind_shouldFindSomeWithSearch() {
-        final String search = "search";
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindSomeWithoutSearchAndWithoutStrictAndWithoutCategory() {
+        String search = null;
+        boolean strict = false;
+        Category category = null;
+        Pageable pageable = Pageable.unpaged();
 
-        this.productService.find(search, null, pageable);
+        Product existingProduct = new Product("myProduct");
+        doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findAll(pageable);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.productRepository).findAll(pageable);
+        verifyNoMoreInteractions(this.productRepository, this.categoryService);
+    }
+
+    @Test
+    public void testFind_shouldFindSomeWithoutSearchAndWithoutStrictAndWithCategory() {
+        String search = null;
+        boolean strict = false;
+        Pageable pageable = Pageable.unpaged();
+
+        UUID existingCategoryId = UUID.randomUUID();
+        Category category = new Category("myCategory");
+        category.setId(existingCategoryId);
+
+        Category existingCategory = new Category("myCategory");
+        doReturn(existingCategory).when(this.categoryService).get(existingCategoryId);
+
+        Product existingProduct = new Product("myProduct");
+        doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findByCategory(existingCategory, pageable);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.categoryService).get(existingCategoryId);
+        verify(this.productRepository).findByCategory(existingCategory, pageable);
+        verifyNoMoreInteractions(this.productRepository, this.categoryService);
+    }
+
+    @Test
+    public void testFind_shouldFindSomeWithoutSearchAndWithStrictAndWithoutCategory() {
+        String search = null;
+        boolean strict = true;
+        Category category = null;
+        Pageable pageable = Pageable.unpaged();
+
+        Product existingProduct = new Product("myProduct");
+        doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findAll(pageable);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.productRepository).findAll(pageable);
+        verifyNoMoreInteractions(this.productRepository, this.categoryService);
+    }
+
+    @Test
+    public void testFind_shouldFindSomeWithoutSearchAndWithStrictAndWithCategory() {
+        String search = null;
+        boolean strict = true;
+        Pageable pageable = Pageable.unpaged();
+
+        UUID existingCategoryId = UUID.randomUUID();
+        Category category = new Category("myCategory");
+        category.setId(existingCategoryId);
+
+        Category existingCategory = new Category("myCategory");
+        doReturn(existingCategory).when(this.categoryService).get(existingCategoryId);
+
+        Product existingProduct = new Product("myProduct");
+        doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findByCategory(existingCategory, pageable);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.categoryService).get(existingCategoryId);
+        verify(this.productRepository).findByCategory(existingCategory, pageable);
+        verifyNoMoreInteractions(this.productRepository, this.categoryService);
+    }
+
+    @Test
+    public void testFind_shouldFindSomeWithSearchAndWithoutStrictAndWithoutCategory() {
+        String search = "search";
+        boolean strict = false;
+        Category category = null;
+        Pageable pageable = Pageable.unpaged();
+
+        Product existingProduct = new Product("myProduct");
+        doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findByNameContainingIgnoreCase(search, pageable);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
 
         verify(this.productRepository).findByNameContainingIgnoreCase(search, pageable);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
-    public void testFind_shouldFindSomeWithCategory() {
-        final Category category = new Category("category");
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindSomeWithSearchAndWithoutStrictAndWithCategory() {
+        String search = "search";
+        boolean strict = false;
+        Pageable pageable = Pageable.unpaged();
 
-        final Category existingCategory = new Category("category");
-        doReturn(existingCategory).when(this.categoryService).get(category.getName());
+        UUID existingCategoryId = UUID.randomUUID();
+        Category category = new Category("myCategory");
+        category.setId(existingCategoryId);
 
-        this.productService.find(null, category, pageable);
+        Category existingCategory = new Category("myCategory");
+        doReturn(existingCategory).when(this.categoryService).get(existingCategoryId);
 
-        verify(this.categoryService).get(category.getName());
-        verify(this.productRepository).findByCategory(same(existingCategory), same(pageable));
+        Product existingProduct = new Product("myProduct");
+        doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository)
+                .findByNameContainingIgnoreCaseAndCategory(search, existingCategory, pageable);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.categoryService).get(existingCategoryId);
+        verify(this.productRepository).findByNameContainingIgnoreCaseAndCategory(search, existingCategory, pageable);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
-    public void testFind_shouldFindSomeWithSearchAndCategory() {
-        final String search = "search";
-        final Category category = new Category("category");
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindSomeWithSearchAndWithStrictAndWithoutCategory() {
+        String search = "search";
+        boolean strict = true;
+        Category category = null;
+        Pageable pageable = Pageable.unpaged();
 
-        final Category existingCategory = new Category("category");
-        doReturn(existingCategory).when(this.categoryService).get(category.getName());
+        Product existingProduct = new Product("myProduct");
+        doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByName(search);
 
-        this.productService.find(search, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
 
-        verify(this.categoryService).get(category.getName());
-        verify(this.productRepository).findByNameContainingIgnoreCaseAndCategory(eq(search), same(existingCategory), same(pageable));
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.productRepository).findOneByName(search);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
-    public void testFind_shouldFindAllWithoutSearchAndCategory() {
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindSomeWithSearchAndWithStrictAndWithCategory() {
+        String search = "search";
+        boolean strict = true;
+        Pageable pageable = Pageable.unpaged();
 
-        this.productService.find(null, null, pageable);
+        UUID existingCategoryId = UUID.randomUUID();
+        Category category = new Category("myCategory");
+        category.setId(existingCategoryId);
 
-        verify(this.productRepository).findAll(same(pageable));
+        Category existingCategory = new Category("myCategory");
+        doReturn(existingCategory).when(this.categoryService).get(existingCategoryId);
+
+        Product existingProduct = new Product("myProduct");
+        doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByNameAndCategory(search, existingCategory);
+
+        Page<Product> page = this.productService.find(search, strict, category, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("name").containsExactly("myProduct");
+
+        verify(this.categoryService).get(existingCategoryId);
+        verify(this.productRepository).findOneByNameAndCategory(search, existingCategory);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
-    public void testGet_ShouldThrowExceptionIfNameNotProvided() {
-        assertThatExceptionOfType(ProductNotFoundException.class)
+    public void testGet_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(() -> this.productService.get(null))
-                .withMessageContainingAll("empty", "name");
+                .withMessageContainingAll("id", "null");
         verifyNoInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
     public void testGet_ShouldThrowExceptionIfProductNotFound() {
-        final String name = "myProduct";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.productRepository).findById(id);
 
         assertThatExceptionOfType(ProductNotFoundException.class)
-                .isThrownBy(() -> this.productService.get(name))
-                .withMessageContainingAll("no", "product", name);
-        verify(this.productRepository).findOneByName(name);
+                .isThrownBy(() -> this.productService.get(id))
+                .withMessageContainingAll("no", "product", id.toString());
+        verify(this.productRepository).findById(id);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
     public void testGet_ShouldReturnProductIfFound() {
-        final String name = "myProduct";
-        final Product product = new Product(name);
+        UUID id = UUID.randomUUID();
+        Product product = new Product("myProduct");
 
-        doReturn(Optional.of(product)).when(this.productRepository).findOneByName(name);
+        doReturn(Optional.of(product)).when(this.productRepository).findById(id);
 
-        Product productReturned = this.productService.get(name);
+        Product productReturned = this.productService.get(id);
         assertThat(productReturned).isSameAs(product);
 
-        verify(this.productRepository).findOneByName(name);
+        verify(this.productRepository).findById(id);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
@@ -130,9 +263,9 @@ public class ProductServiceTest {
 
     @Test
     public void testCreate_ShouldThrowExceptionIfProductAlreadyExists() {
-        final String name = "myProduct";
-        final Product existingProduct = new Product(name);
-        final Product newProduct = new Product(name);
+        String name = "myProduct";
+        Product existingProduct = new Product(name);
+        Product newProduct = new Product(name);
 
         doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByName(name);
 
@@ -145,21 +278,24 @@ public class ProductServiceTest {
 
     @Test
     public void testCreate_ShouldSaveNewProductIfNotAlreadyExistsWithCategory() {
-        final ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
 
-        final String name = "myProduct";
-        final Category category = new Category("category");
-        final Product newProduct = new Product(name, category);
+        UUID categoryId = UUID.randomUUID();
+        Category category = new Category("category");
+        category.setId(categoryId);
 
-        final Category existingCategory = new Category("category");
-        doReturn(existingCategory).when(this.categoryService).get(category.getName());
+        String name = "myProduct";
+        Product newProduct = new Product(name, category);
+
+        Category existingCategory = new Category("category");
+        doReturn(existingCategory).when(this.categoryService).get(categoryId);
 
         doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
 
         this.productService.create(newProduct);
 
         verify(this.productRepository).findOneByName(name);
-        verify(this.categoryService).get(category.getName());
+        verify(this.categoryService).get(categoryId);
         verify(this.productRepository).save(productCaptor.capture());
         assertThat(productCaptor.getValue()).extracting("name").isEqualTo(name);
         assertThat(productCaptor.getValue()).extracting("category").isSameAs(existingCategory);
@@ -168,10 +304,10 @@ public class ProductServiceTest {
 
     @Test
     public void testCreate_ShouldSaveNewProductIfNotAlreadyExistsWithoutCategory() {
-        final ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
 
-        final String name = "myProduct";
-        final Product newProduct = new Product(name, null);
+        String name = "myProduct";
+        Product newProduct = new Product(name, null);
 
         doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
 
@@ -185,53 +321,83 @@ public class ProductServiceTest {
     }
 
     @Test
+    public void testUpdate_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> this.productService.update(null, new Product(null)))
+                .withMessageContainingAll("id", "null");
+        verifyNoInteractions(this.productRepository, this.categoryService);
+    }
+
+    @Test
     public void testUpdate_ShouldThrowExceptionIfUpdateNotProvided() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> this.productService.update("product", null))
+                .isThrownBy(() -> this.productService.update(UUID.randomUUID(), null))
                 .withMessageContainingAll("data", "null");
         verifyNoInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
-    public void testUpdate_ShouldThrowExceptionIfNameNotProvided() {
+    public void testUpdate_ShouldThrowExceptionIfProductNotFound() {
+        UUID id = UUID.randomUUID();
+
+        doReturn(Optional.empty()).when(this.productRepository).findById(id);
+
         assertThatExceptionOfType(ProductNotFoundException.class)
-                .isThrownBy(() -> this.productService.update("", new Product(null)))
-                .withMessageContainingAll("name", "empty");
-        verifyNoInteractions(this.productRepository, this.categoryService);
+                .isThrownBy(() -> this.productService.update(id, new Product(null)))
+                .withMessageContainingAll("no", "product", id.toString());
+        verify(this.productRepository).findById(id);
+        verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
-    public void testUpdate_ShouldThrowExceptionIfProductNotFound() {
-        final String name = "myProduct";
+    public void testUpdate_ShouldThrowExceptionIfNewProductNameAlreadyExists() {
+        UUID id = UUID.randomUUID();
+        String name = "myProduct";
+        String newName = "myNewProduct";
 
-        doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
+        Product existingProduct = new Product(name);
+        doReturn(Optional.of(existingProduct)).when(this.productRepository).findById(id);
 
-        assertThatExceptionOfType(ProductNotFoundException.class)
-                .isThrownBy(() -> this.productService.update(name, new Product(null)))
-                .withMessageContainingAll("no", "product", name);
-        verify(this.productRepository).findOneByName(name);
+        Product conflictingProduct = new Product(newName);
+        doReturn(Optional.of(conflictingProduct)).when(this.productRepository).findOneByName(newName);
+
+        Product update = new Product(newName);
+
+        assertThatExceptionOfType(ProductAlreadyExistsException.class)
+                .isThrownBy(() -> this.productService.update(id, update))
+                .withMessageContainingAll("product", "exists", newName);
+        verify(this.productRepository).findById(id);
+        verify(this.productRepository).findOneByName(newName);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
     public void testUpdate_ShouldTriggerUpdateIfProductExistsWithCategory() {
-        final ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
 
-        final String name = "myProduct";
-        final String newName = "newName";
-        final Category newCategory = new Category("category");
-        final Product existingProduct = new Product(name);
-        final Product update = new Product(newName, newCategory);
+        UUID id = UUID.randomUUID();
+        String name = "myProduct";
+        String newName = "newName";
 
-        final Category existingCategory = new Category("category");
-        doReturn(existingCategory).when(this.categoryService).get(newCategory.getName());
+        UUID newCategoryId = UUID.randomUUID();
+        Category newCategory = new Category("category");
+        newCategory.setId(newCategoryId);
 
-        doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByName(name);
+        Product existingProduct = new Product(name);
+        Product update = new Product(newName, newCategory);
 
-        this.productService.update(name, update);
+        Category existingCategory = new Category("category");
+        doReturn(existingCategory).when(this.categoryService).get(newCategoryId);
 
-        verify(this.productRepository).findOneByName(name);
-        verify(this.categoryService).get(newCategory.getName());
+        doReturn(Optional.of(existingProduct)).when(this.productRepository).findById(id);
+
+        doReturn(Optional.empty()).when(this.productRepository).findOneByName(newName);
+
+        this.productService.update(id, update);
+
+        verify(this.productRepository).findById(id);
+        verify(this.categoryService).get(newCategoryId);
+        verify(this.productRepository).findOneByName(newName);
         verify(this.productRepository).save(productCaptor.capture());
         assertThat(productCaptor.getValue()).isSameAs(existingProduct);
         assertThat(productCaptor.getValue()).extracting("name").isEqualTo(newName);
@@ -241,18 +407,23 @@ public class ProductServiceTest {
 
     @Test
     public void testUpdate_ShouldTriggerUpdateIfProductExistsWithoutCategory() {
-        final ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
 
-        final String name = "myProduct";
-        final String newName = "newName";
-        final Product existingProduct = new Product(name);
-        final Product update = new Product(newName, null);
+        UUID id = UUID.randomUUID();
+        String name = "myProduct";
+        String newName = "newName";
 
-        doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByName(name);
+        Product existingProduct = new Product(name);
+        Product update = new Product(newName);
 
-        this.productService.update(name, update);
+        doReturn(Optional.of(existingProduct)).when(this.productRepository).findById(id);
 
-        verify(this.productRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.productRepository).findOneByName(newName);
+
+        this.productService.update(id, update);
+
+        verify(this.productRepository).findById(id);
+        verify(this.productRepository).findOneByName(newName);
         verify(this.productRepository).save(productCaptor.capture());
         assertThat(productCaptor.getValue()).isSameAs(existingProduct);
         assertThat(productCaptor.getValue()).extracting("name").isEqualTo(newName);
@@ -261,33 +432,33 @@ public class ProductServiceTest {
     }
 
     @Test
-    public void testDelete_ShouldDoNothingIfNameNotProvided() {
+    public void testDelete_ShouldDoNothingIfIdNotProvided() {
         this.productService.delete(null);
         verifyNoInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
     public void testDelete_ShouldDoNothingIfProductNotExists() {
-        final String name = "myProduct";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.productRepository).findById(id);
 
-        this.productService.delete(name);
+        this.productService.delete(id);
 
-        verify(this.productRepository).findOneByName(name);
+        verify(this.productRepository).findById(id);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }
 
     @Test
     public void testDelete_ShouldDeleteProductIfExists() {
-        final String name = "myProduct";
-        final Product existingProduct = new Product(name);
+        UUID id = UUID.randomUUID();
+        Product existingProduct = new Product("myProduct");
 
-        doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByName(name);
+        doReturn(Optional.of(existingProduct)).when(this.productRepository).findById(id);
 
-        this.productService.delete(name);
+        this.productService.delete(id);
 
-        verify(this.productRepository).findOneByName(name);
+        verify(this.productRepository).findById(id);
         verify(this.productRepository).delete(same(existingProduct));
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
     }

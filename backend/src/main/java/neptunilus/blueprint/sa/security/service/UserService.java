@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 /**
  * Service for handling with {@link User}s.
  */
@@ -16,20 +18,21 @@ public interface UserService {
     /**
      * Returns the available users.
      *
-     * @param search   The (optional) search string for user email.
+     * @param search   The (optional) search string for user email
+     * @param strict   Flag, if the email should be exactly the same
      * @param pageable The pagination information
      * @return The categories
      */
-    Page<User> find(String search, Pageable pageable);
+    Page<User> find(String search, boolean strict, Pageable pageable);
 
     /**
-     * Returns the user with the given email.
+     * Returns the user with the given id.
      *
-     * @param email The email
+     * @param id The id
      * @return The user
-     * @throws UserNotFoundException If a user with the given email is not found
+     * @throws UserNotFoundException If a user with the given id is not found
      */
-    User get(String email) throws UserNotFoundException;
+    User get(UUID id) throws UserNotFoundException;
 
     /**
      * Creates a new user.
@@ -42,17 +45,18 @@ public interface UserService {
     /**
      * Updates an existing user.
      *
-     * @param email  The email of the existing user to update
+     * @param id     The id of the existing user to update
      * @param update The new data for the user
-     * @throws UserNotFoundException If a user with the given email is not found
+     * @throws UserNotFoundException      If a user with the given id is not found
+     * @throws UserAlreadyExistsException If a user with the new email is already there
      */
-    void update(String email, User update) throws UserNotFoundException;
+    void update(UUID id, User update) throws UserNotFoundException, UserAlreadyExistsException;
 
     /**
      * Deletes an existing user (if in the system).
      *
-     * @param email The email of the user to remove
+     * @param id The id of the user to remove
      */
-    void delete(String email);
+    void delete(UUID id);
 
 }

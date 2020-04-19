@@ -5,6 +5,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.UUID;
 
 /**
  * A user.
@@ -17,9 +18,8 @@ public class User {
      * The unique identifier.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_generator")
-    @SequenceGenerator(name = "user_generator", sequenceName = "user_sequence")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     /**
      * The unique email address (not empty).
@@ -55,11 +55,11 @@ public class User {
         this.role = role;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public void setId(final Long id) {
+    public void setId(final UUID id) {
         this.id = id;
     }
 

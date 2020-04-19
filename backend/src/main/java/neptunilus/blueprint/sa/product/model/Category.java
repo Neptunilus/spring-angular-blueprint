@@ -3,6 +3,7 @@ package neptunilus.blueprint.sa.product.model;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
+import java.util.UUID;
 
 /**
  * A category.
@@ -15,15 +16,14 @@ public class Category {
      * The unique identifier.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_generator")
-    @SequenceGenerator(name = "category_generator", sequenceName = "category_sequence")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     /**
      * The (unique) name (cannot be empty).
      */
     @NotEmpty
-    @Size(max = 50)
+    @Size(max = 100)
     @Column(unique = true)
     private String name;
 
@@ -35,11 +35,11 @@ public class Category {
         this.name = name;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public void setId(final Long id) {
+    public void setId(final UUID id) {
         this.id = id;
     }
 

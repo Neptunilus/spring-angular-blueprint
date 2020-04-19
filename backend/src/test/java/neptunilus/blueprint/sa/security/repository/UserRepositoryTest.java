@@ -14,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import javax.validation.ConstraintViolationException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static neptunilus.blueprint.sa.security.model.Authority.CREATE_CATEGORY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +32,33 @@ public class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Test
+    public void testFindById_ShouldFind() {
+        UserRole userRole = new UserRole("admin", Set.of(CREATE_CATEGORY, Authority.CREATE_PRODUCT));
+        this.testEntityManager.persist(userRole);
+
+        User userToFind = new User("test@test.xy", "abc", userRole);
+        UUID idToFind = this.testEntityManager.persist(userToFind).getId();
+
+        User userNotToFind = new User("test2@test.xy", "abc", userRole);
+        this.testEntityManager.persist(userNotToFind);
+
+        this.testEntityManager.flush();
+        this.testEntityManager.clear();
+
+        Optional<User> user = this.userRepository.findById(idToFind);
+        assertThat(user).isPresent();
+        assertThat(user).get().extracting("email").isEqualTo("test@test.xy");
+        assertThat(user).get().extracting("password").isEqualTo("abc");
+        assertThat(user).get().extracting("role").extracting("name").isEqualTo("admin");
+    }
+
+    @Test
+    public void testFindById_ShouldNotFind() {
+        Optional<User> user = this.userRepository.findById(UUID.randomUUID());
+        assertThat(user).isNotPresent();
+    }
 
     @Test
     public void testFindOneByEmail_ShouldFind() {

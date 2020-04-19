@@ -8,12 +8,16 @@ import neptunilus.blueprint.sa.security.repository.UserRepository;
 import neptunilus.blueprint.sa.security.service.UserRoleService;
 import neptunilus.blueprint.sa.security.service.UserService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Concrete implementation of {@link UserService}.
@@ -34,36 +38,34 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<User> find(final String search, final Pageable pageable) {
+    public Page<User> find(final String search, final boolean strict, final Pageable pageable) {
         if (search == null || search.isBlank()) {
             return this.userRepository.findAll(pageable);
+        }
+        if (strict) {
+            final Optional<User> user = this.userRepository.findOneByEmail(search);
+            return user.isPresent() ? new PageImpl<>(Collections.singletonList(user.get())) : Page.empty();
         }
         return this.userRepository.findByEmailContainingIgnoreCase(search, pageable);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public User get(final String email) throws UserNotFoundException {
-        if (email == null || email.isBlank()) {
-            throw new UserNotFoundException("no user with empty email possible");
-        }
+    public User get(final UUID id) throws UserNotFoundException {
+        Assert.notNull(id, "id must not be null");
 
-        final Optional<User> user = this.userRepository.findOneByEmail(email);
-        return user.orElseThrow(() -> new UserNotFoundException(String.format("no user found with email '%s'", email)));
+        final Optional<User> user = this.userRepository.findById(id);
+        return user.orElseThrow(() -> new UserNotFoundException(String.format("no user found with id '%s'", id)));
     }
 
     @Transactional
     @Override
     public void create(final User user) throws UserAlreadyExistsException {
         Assert.notNull(user, "user must not be null");
-
-        final Optional<User> existingUser = this.userRepository.findOneByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            throw new UserAlreadyExistsException(String.format("user with email '%s' already exists", user.getEmail()));
-        }
+        assertUserWithEmailNotPresent(user.getEmail());
 
         final UserRole userRoleFetched = user.getRole() != null ?
-                this.userRoleService.get(user.getRole().getName()) : null;
+                this.userRoleService.get(user.getRole().getId()) : null;
         final String passwordEncoded = this.passwordEncoder.encode(user.getPassword());
 
         final User newUser = new User(user.getEmail(), passwordEncoded, userRoleFetched);
@@ -72,13 +74,18 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void update(final String email, final User update) throws UserNotFoundException {
+    public void update(final UUID id, final User update) throws UserNotFoundException {
+        Assert.notNull(id, "id must not be null");
         Assert.notNull(update, "new data must not be null");
 
-        final User existingUser = get(email);
+        final User existingUser = get(id);
+
+        if (!Objects.equals(existingUser.getEmail(), update.getEmail())) {
+            assertUserWithEmailNotPresent(update.getEmail());
+        }
 
         final UserRole newUserRole = update.getRole() != null ?
-                this.userRoleService.get(update.getRole().getName()) : null;
+                this.userRoleService.get(update.getRole().getId()) : null;
         final String passwordEncoded = update.getPassword() == null || update.getPassword().isBlank() ?
                 existingUser.getPassword() : this.passwordEncoder.encode(update.getPassword());
 
@@ -91,12 +98,19 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void delete(final String email) {
-        if (email == null || email.isBlank()) {
+    public void delete(final UUID id) {
+        if (id == null) {
             return;
         }
 
-        final Optional<User> existingUser = this.userRepository.findOneByEmail(email);
+        final Optional<User> existingUser = this.userRepository.findById(id);
         existingUser.ifPresent(this.userRepository::delete);
+    }
+
+    private void assertUserWithEmailNotPresent(final String email) {
+        final Optional<User> existingUser = this.userRepository.findOneByEmail(email);
+        if (existingUser.isPresent()) {
+            throw new UserAlreadyExistsException(String.format("user with email '%s' already exists", email));
+        }
     }
 }

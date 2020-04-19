@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 /**
  * Service for handling with {@link UserRole}s.
  */
@@ -21,12 +23,12 @@ public interface UserRoleService {
     Page<UserRole> find(Pageable pageable);
 
     /**
-     * Returns the user role with the given name.
+     * Returns the user role with the given id.
      *
-     * @param name The name
+     * @param id The id
      * @return The user role
-     * @throws UserRoleNotFoundException If a user role with the given name is not found
+     * @throws UserRoleNotFoundException If a user role with the given id is not found
      */
-    UserRole get(String name) throws UserRoleNotFoundException;
+    UserRole get(UUID id) throws UserRoleNotFoundException;
 
 }

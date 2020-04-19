@@ -2,8 +2,10 @@ package neptunilus.blueprint.sa.security.model;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * A user role.
@@ -16,14 +18,15 @@ public class UserRole {
      * The unique identifier.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_role_generator")
-    @SequenceGenerator(name = "user_role_generator", sequenceName = "user_role_sequence")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     /**
      * The name (not empty).
      */
     @NotEmpty
+    @Size(max = 50)
+    @Column(unique = true)
     private String name;
 
     /**
@@ -47,11 +50,11 @@ public class UserRole {
         }
     }
 
-    public Long getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public void setId(final Long id) {
+    public void setId(final UUID id) {
         this.id = id;
     }
 

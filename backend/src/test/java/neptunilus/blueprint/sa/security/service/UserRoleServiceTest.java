@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -39,37 +40,37 @@ public class UserRoleServiceTest {
     }
 
     @Test
-    public void testGet_ShouldThrowExceptionIfNameNotProvided() {
-        assertThatExceptionOfType(UserRoleNotFoundException.class)
+    public void testGet_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(() -> this.userRoleService.get(null))
-                .withMessageContainingAll("empty", "name");
+                .withMessageContainingAll("id", "null");
         verifyNoInteractions(this.userRoleRepository);
     }
 
     @Test
     public void testGet_ShouldThrowExceptionIfUserRoleNotFound() {
-        final String name = "myUserRole";
+        final UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.userRoleRepository).findOneByName(name);
+        doReturn(Optional.empty()).when(this.userRoleRepository).findById(id);
 
         assertThatExceptionOfType(UserRoleNotFoundException.class)
-                .isThrownBy(() -> this.userRoleService.get(name))
-                .withMessageContainingAll("no", "user role", name);
-        verify(this.userRoleRepository).findOneByName(name);
+                .isThrownBy(() -> this.userRoleService.get(id))
+                .withMessageContainingAll("no", "user role", id.toString());
+        verify(this.userRoleRepository).findById(id);
         verifyNoMoreInteractions(this.userRoleRepository);
     }
 
     @Test
     public void testGet_ShouldReturnUserRoleIfFound() {
-        final String name = "myUserRole";
-        final UserRole userRole = new UserRole(name, Collections.emptySet());
+        final UUID id = UUID.randomUUID();
+        final UserRole userRole = new UserRole("user role", Collections.emptySet());
 
-        doReturn(Optional.of(userRole)).when(this.userRoleRepository).findOneByName(name);
+        doReturn(Optional.of(userRole)).when(this.userRoleRepository).findById(id);
 
-        UserRole userRoleReturned = this.userRoleService.get(name);
+        UserRole userRoleReturned = this.userRoleService.get(id);
         assertThat(userRoleReturned).isSameAs(userRole);
 
-        verify(this.userRoleRepository).findOneByName(name);
+        verify(this.userRoleRepository).findById(id);
         verifyNoMoreInteractions(this.userRoleRepository);
     }
 }

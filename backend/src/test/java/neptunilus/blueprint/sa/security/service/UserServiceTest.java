@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -41,58 +43,109 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testFind_shouldFindSomeWithSearch() {
-        final String search = "search";
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindSomeWithSearchAndWithStrict() {
+        String search = "search";
+        boolean strict = true;
+        Pageable pageable = Pageable.unpaged();
 
-        this.userService.find(search, pageable);
+        User existingUser = new User("me@mail.xy", "password", null);
+        doReturn(Optional.of(existingUser)).when(this.userRepository).findOneByEmail(search);
+
+        Page<User> page = this.userService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("email").containsExactly("me@mail.xy");
+
+        verify(this.userRepository).findOneByEmail(search);
+        verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
+    }
+
+    @Test
+    public void testFind_shouldFindSomeWithSearchAndWithoutStrict() {
+        String search = "search";
+        boolean strict = false;
+        Pageable pageable = Pageable.unpaged();
+
+        User existingUser = new User("me@mail.xy", "password", null);
+        doReturn(new PageImpl<>(Collections.singletonList(existingUser))).when(this.userRepository).findByEmailContainingIgnoreCase(search, pageable);
+
+        Page<User> page = this.userService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("email").containsExactly("me@mail.xy");
 
         verify(this.userRepository).findByEmailContainingIgnoreCase(search, pageable);
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
-    public void testFind_shouldFindAllWithoutSearch() {
-        final Pageable pageable = Pageable.unpaged();
+    public void testFind_shouldFindAllWithoutSearchAndWithStrict() {
+        String search = null;
+        boolean strict = true;
+        Pageable pageable = Pageable.unpaged();
 
-        this.userService.find(null, pageable);
+        User existingUser = new User("me@mail.xy", "password", null);
+        doReturn(new PageImpl<>(Collections.singletonList(existingUser))).when(this.userRepository).findAll(pageable);
 
-        verify(this.userRepository).findAll(same(pageable));
+        Page<User> page = this.userService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("email").containsExactly("me@mail.xy");
+
+        verify(this.userRepository).findAll(pageable);
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
-    public void testGet_ShouldThrowExceptionIfEmailNotProvided() {
-        assertThatExceptionOfType(UserNotFoundException.class)
+    public void testFind_shouldFindAllWithoutSearchAndWithoutStrict() {
+        String search = null;
+        boolean strict = false;
+        Pageable pageable = Pageable.unpaged();
+
+        User existingUser = new User("me@mail.xy", "password", null);
+        doReturn(new PageImpl<>(Collections.singletonList(existingUser))).when(this.userRepository).findAll(pageable);
+
+        Page<User> page = this.userService.find(search, strict, pageable);
+
+        assertThat(page).hasSize(1);
+        assertThat(page).extracting("email").containsExactly("me@mail.xy");
+
+        verify(this.userRepository).findAll(pageable);
+        verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
+    }
+
+    @Test
+    public void testGet_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(() -> this.userService.get(null))
-                .withMessageContainingAll("empty", "email");
+                .withMessageContainingAll("id", "null");
         verifyNoInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
     public void testGet_ShouldThrowExceptionIfUserNotFound() {
-        final String email = "my@mail.xy";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.userRepository).findOneByEmail(email);
+        doReturn(Optional.empty()).when(this.userRepository).findById(id);
 
         assertThatExceptionOfType(UserNotFoundException.class)
-                .isThrownBy(() -> this.userService.get(email))
-                .withMessageContainingAll("no", "user", email);
-        verify(this.userRepository).findOneByEmail(email);
+                .isThrownBy(() -> this.userService.get(id))
+                .withMessageContainingAll("no", "user", id.toString());
+        verify(this.userRepository).findById(id);
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
     public void testGet_ShouldReturnUserIfFound() {
-        final String email = "me@mail.xy";
-        final User user = new User(email, null, null);
+        UUID id = UUID.randomUUID();
+        User user = new User("my@mail.xy", null, null);
 
-        doReturn(Optional.of(user)).when(this.userRepository).findOneByEmail(email);
+        doReturn(Optional.of(user)).when(this.userRepository).findById(id);
 
-        User userReturned = this.userService.get(email);
+        User userReturned = this.userService.get(id);
         assertThat(userReturned).isSameAs(user);
 
-        verify(this.userRepository).findOneByEmail(email);
+        verify(this.userRepository).findById(id);
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
@@ -106,9 +159,9 @@ public class UserServiceTest {
 
     @Test
     public void testCreate_ShouldThrowExceptionIfUserAlreadyExists() {
-        final String email = "me@mail.xy";
-        final User existingUser = new User(email, null, null);
-        final User newUser = new User(email, null, null);
+        String email = "me@mail.xy";
+        User existingUser = new User(email, null, null);
+        User newUser = new User(email, null, null);
 
         doReturn(Optional.of(existingUser)).when(this.userRepository).findOneByEmail(email);
 
@@ -121,25 +174,29 @@ public class UserServiceTest {
 
     @Test
     public void testCreate_ShouldSaveNewUserIfNotAlreadyExists() {
-        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
-        final String email = "me@mail.xy";
-        final String password = "password";
-        final UserRole userRole = new UserRole("role", Collections.emptySet());
-        final User newUser = new User(email, password, userRole);
+        String email = "me@mail.xy";
+        String password = "password";
 
-        final UserRole existingUserRole = new UserRole("role", Collections.emptySet());
-        doReturn(existingUserRole).when(this.userRoleService).get(userRole.getName());
+        UUID userRoleId = UUID.randomUUID();
+        UserRole userRole = new UserRole("role", Collections.emptySet());
+        userRole.setId(userRoleId);
+
+        User newUser = new User(email, password, userRole);
+
+        UserRole existingUserRole = new UserRole("role", Collections.emptySet());
+        doReturn(existingUserRole).when(this.userRoleService).get(userRoleId);
 
         doReturn(Optional.empty()).when(this.userRepository).findOneByEmail(email);
 
-        final String passwordEncoded = UUID.randomUUID().toString();
+        String passwordEncoded = UUID.randomUUID().toString();
         doReturn(passwordEncoded).when(this.passwordEncoder).encode(password);
 
         this.userService.create(newUser);
 
         verify(this.userRepository).findOneByEmail(email);
-        verify(this.userRoleService).get(userRole.getName());
+        verify(this.userRoleService).get(userRoleId);
         verify(this.passwordEncoder).encode(password);
         verify(this.userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).extracting("email").isEqualTo(email);
@@ -149,58 +206,87 @@ public class UserServiceTest {
     }
 
     @Test
+    public void testUpdate_ShouldThrowExceptionIfIdNotProvided() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> this.userService.update(null, new User(null, null, null)))
+                .withMessageContainingAll("id", "null");
+        verifyNoInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
+    }
+
+    @Test
     public void testUpdate_ShouldThrowExceptionIfUpdateNotProvided() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> this.userService.update("email", null))
+                .isThrownBy(() -> this.userService.update(UUID.randomUUID(), null))
                 .withMessageContainingAll("data", "null");
         verifyNoInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
-    public void testUpdate_ShouldThrowExceptionIfEmailNotProvided() {
-        assertThatExceptionOfType(UserNotFoundException.class)
-                .isThrownBy(() -> this.userService.update("", new User(null, null, null)))
-                .withMessageContainingAll("email", "empty");
-        verifyNoInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
-    }
-
-    @Test
     public void testUpdate_ShouldThrowExceptionIfUserNotFound() {
-        final String email = "me@mail.xy";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.userRepository).findOneByEmail(email);
+        doReturn(Optional.empty()).when(this.userRepository).findById(id);
 
         assertThatExceptionOfType(UserNotFoundException.class)
-                .isThrownBy(() -> this.userService.update(email, new User(null, null, null)))
-                .withMessageContainingAll("no", "user", email);
-        verify(this.userRepository).findOneByEmail(email);
+                .isThrownBy(() -> this.userService.update(id, new User(null, null, null)))
+                .withMessageContainingAll("no", "user", id.toString());
+        verify(this.userRepository).findById(id);
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
-    public void testUpdate_ShouldTriggerUpdateIfProductExistsWithPasswordChange() {
-        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    public void testUpdate_ShouldThrowExceptionIfNewUserEmailAlreadyExists() {
+        UUID id = UUID.randomUUID();
+        String email = "me@mail.xy";
+        String newEmail = "new@mail.xy";
 
-        final String email = "me@mail.xy";
-        final String password = UUID.randomUUID().toString();
-        final String newEmail = "new@abc.xy";
-        final String newPassword = "password";
-        final UserRole newUserRole = new UserRole("role", Collections.emptySet());
-        final User existingUser = new User(email, password, new UserRole("roleOld", Collections.emptySet()));
-        final User update = new User(newEmail, newPassword, newUserRole);
+        User update = new User(newEmail, null, null);
 
-        final UserRole existingUserRole = new UserRole("role", Collections.emptySet());
-        doReturn(existingUserRole).when(this.userRoleService).get(newUserRole.getName());
+        User existingUser = new User(email, null, null);
+        doReturn(Optional.of(existingUser)).when(this.userRepository).findById(id);
 
-        final String newPasswordEncoded = UUID.randomUUID().toString();
+        User conflictingUser = new User(newEmail, null, null);
+        doReturn(Optional.of(conflictingUser)).when(this.userRepository).findOneByEmail(newEmail);
+
+        assertThatExceptionOfType(UserAlreadyExistsException.class)
+                .isThrownBy(() -> this.userService.update(id, update))
+                .withMessageContainingAll("user", "exists", newEmail);
+        verify(this.userRepository).findById(id);
+        verify(this.userRepository).findOneByEmail(newEmail);
+        verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
+    }
+
+    @Test
+    public void testUpdate_ShouldTriggerUpdateIfUserExistsWithPasswordChange() {
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+
+        UUID id = UUID.randomUUID();
+        String email = "me@mail.xy";
+        String password = UUID.randomUUID().toString();
+        String newEmail = "new@abc.xy";
+        String newPassword = "password";
+
+        UUID newUserRoleId = UUID.randomUUID();
+        UserRole newUserRole = new UserRole("role", Collections.emptySet());
+        newUserRole.setId(newUserRoleId);
+
+        User existingUser = new User(email, password, new UserRole("roleOld", Collections.emptySet()));
+        User update = new User(newEmail, newPassword, newUserRole);
+
+        UserRole existingUserRole = new UserRole("role", Collections.emptySet());
+        doReturn(existingUserRole).when(this.userRoleService).get(newUserRoleId);
+
+        String newPasswordEncoded = UUID.randomUUID().toString();
         doReturn(newPasswordEncoded).when(this.passwordEncoder).encode(newPassword);
 
-        doReturn(Optional.of(existingUser)).when(this.userRepository).findOneByEmail(email);
+        doReturn(Optional.of(existingUser)).when(this.userRepository).findById(id);
+        doReturn(Optional.empty()).when(this.userRepository).findOneByEmail(newEmail);
 
-        this.userService.update(email, update);
+        this.userService.update(id, update);
 
-        verify(this.userRepository).findOneByEmail(email);
-        verify(this.userRoleService).get(newUserRole.getName());
+        verify(this.userRepository).findById(id);
+        verify(this.userRepository).findOneByEmail(newEmail);
+        verify(this.userRoleService).get(newUserRole.getId());
         verify(this.passwordEncoder).encode(newPassword);
         verify(this.userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).isSameAs(existingUser);
@@ -212,24 +298,32 @@ public class UserServiceTest {
 
     @Test
     public void testUpdate_ShouldTriggerUpdateIfProductExistsWithoutPasswordChange() {
-        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
-        final String email = "me@mail.xy";
-        final String password = UUID.randomUUID().toString();
-        final String newEmail = "new@abc.xy";
-        final UserRole newUserRole = new UserRole("role", Collections.emptySet());
-        final User existingUser = new User(email, password, new UserRole("roleOld", Collections.emptySet()));
-        final User update = new User(newEmail, null, newUserRole);
+        UUID id = UUID.randomUUID();
+        String email = "me@mail.xy";
+        String password = "password";
+        String newEmail = "new@abc.xy";
+        String newPassword = null;
 
-        final UserRole existingUserRole = new UserRole("role", Collections.emptySet());
-        doReturn(existingUserRole).when(this.userRoleService).get(newUserRole.getName());
+        UUID newUserRoleId = UUID.randomUUID();
+        UserRole newUserRole = new UserRole("role", Collections.emptySet());
+        newUserRole.setId(newUserRoleId);
 
-        doReturn(Optional.of(existingUser)).when(this.userRepository).findOneByEmail(email);
+        User existingUser = new User(email, password, new UserRole("roleOld", Collections.emptySet()));
+        User update = new User(newEmail, newPassword, newUserRole);
 
-        this.userService.update(email, update);
+        UserRole existingUserRole = new UserRole("role", Collections.emptySet());
+        doReturn(existingUserRole).when(this.userRoleService).get(newUserRoleId);
 
-        verify(this.userRepository).findOneByEmail(email);
-        verify(this.userRoleService).get(newUserRole.getName());
+        doReturn(Optional.of(existingUser)).when(this.userRepository).findById(id);
+        doReturn(Optional.empty()).when(this.userRepository).findOneByEmail(newEmail);
+
+        this.userService.update(id, update);
+
+        verify(this.userRepository).findById(id);
+        verify(this.userRepository).findOneByEmail(newEmail);
+        verify(this.userRoleService).get(newUserRole.getId());
         verify(this.userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).isSameAs(existingUser);
         assertThat(userCaptor.getValue()).extracting("email").isEqualTo(newEmail);
@@ -239,33 +333,33 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testDelete_ShouldDoNothingIfEmailNotProvided() {
+    public void testDelete_ShouldDoNothingIfIdNotProvided() {
         this.userService.delete(null);
         verifyNoInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
     public void testDelete_ShouldDoNothingIfUserNotExists() {
-        final String email = "me@mail.xy";
+        UUID id = UUID.randomUUID();
 
-        doReturn(Optional.empty()).when(this.userRepository).findOneByEmail(email);
+        doReturn(Optional.empty()).when(this.userRepository).findById(id);
 
-        this.userService.delete(email);
+        this.userService.delete(id);
 
-        verify(this.userRepository).findOneByEmail(email);
+        verify(this.userRepository).findById(id);
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
 
     @Test
     public void testDelete_ShouldDeleteUserIfExists() {
-        final String email = "me@mail.xy";
-        final User existingUser = new User(email, null, null);
+        UUID id = UUID.randomUUID();
+        User existingUser = new User("my@mail.xy", null, null);
 
-        doReturn(Optional.of(existingUser)).when(this.userRepository).findOneByEmail(email);
+        doReturn(Optional.of(existingUser)).when(this.userRepository).findById(id);
 
-        this.userService.delete(email);
+        this.userService.delete(id);
 
-        verify(this.userRepository).findOneByEmail(email);
+        verify(this.userRepository).findById(id);
         verify(this.userRepository).delete(same(existingUser));
         verifyNoMoreInteractions(this.userRepository, this.userRoleService, this.passwordEncoder);
     }
