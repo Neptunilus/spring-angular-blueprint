@@ -173,10 +173,15 @@ public class CategoryServiceTest {
 
         doReturn(Optional.empty()).when(this.categoryRepository).findOneByName(name);
 
-        this.categoryService.create(newCategory);
+        Category persistedCategory = new Category(name);
+        persistedCategory.setId(UUID.randomUUID());
+        doReturn(persistedCategory).when(this.categoryRepository).save(any(Category.class));
+
+        UUID newId = this.categoryService.create(newCategory);
 
         verify(this.categoryRepository).findOneByName(name);
         verify(this.categoryRepository).save(categoryCaptor.capture());
+        assertThat(newId).isEqualTo(persistedCategory.getId());
         assertThat(categoryCaptor.getValue()).extracting("name").isEqualTo(name);
         verifyNoMoreInteractions(this.categoryRepository);
     }

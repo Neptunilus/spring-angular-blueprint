@@ -38,9 +38,10 @@ public interface CategoryService {
      * Creates a new category.
      *
      * @param category The category to add
+     * @return The id of the new category
      * @throws CategoryAlreadyExistsException If a category with the given name is already there
      */
-    void create(Category category) throws CategoryAlreadyExistsException;
+    UUID create(Category category) throws CategoryAlreadyExistsException;
 
     /**
      * Updates an existing category.

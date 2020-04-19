@@ -2,7 +2,6 @@ package neptunilus.blueprint.sa.product.service;
 
 import neptunilus.blueprint.sa.product.exception.ProductAlreadyExistsException;
 import neptunilus.blueprint.sa.product.exception.ProductNotFoundException;
-import neptunilus.blueprint.sa.product.model.Category;
 import neptunilus.blueprint.sa.product.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,13 +18,13 @@ public interface ProductService {
     /**
      * Returns the available products.
      *
-     * @param search   The (optional) search string for product name
-     * @param strict   Flag, if the name should be exactly the same
-     * @param category The (optional) category of the product
-     * @param pageable The pagination information
+     * @param search     The (optional) search string for product name
+     * @param strict     Flag, if the name should be exactly the same
+     * @param categoryId The (optional) category (id) of the product
+     * @param pageable   The pagination information
      * @return The products
      */
-    Page<Product> find(String search, boolean strict, Category category, Pageable pageable);
+    Page<Product> find(String search, boolean strict, UUID categoryId, Pageable pageable);
 
     /**
      * Returns the product with the given id.
@@ -40,9 +39,10 @@ public interface ProductService {
      * Creates a new product.
      *
      * @param product The product to add
+     * @return The id of the new product
      * @throws ProductAlreadyExistsException If a product with the given name is already there
      */
-    void create(Product product) throws ProductAlreadyExistsException;
+    UUID create(Product product) throws ProductAlreadyExistsException;
 
     /**
      * Updates an existing product.

@@ -193,12 +193,18 @@ public class UserServiceTest {
         String passwordEncoded = UUID.randomUUID().toString();
         doReturn(passwordEncoded).when(this.passwordEncoder).encode(password);
 
-        this.userService.create(newUser);
+        User persistedUser = new User("my@mail.xy", null, null);
+        persistedUser.setId(UUID.randomUUID());
+
+        doReturn(persistedUser).when(this.userRepository).save(any(User.class));
+
+        UUID newId = this.userService.create(newUser);
 
         verify(this.userRepository).findOneByEmail(email);
         verify(this.userRoleService).get(userRoleId);
         verify(this.passwordEncoder).encode(password);
         verify(this.userRepository).save(userCaptor.capture());
+        assertThat(newId).isEqualTo(persistedUser.getId());
         assertThat(userCaptor.getValue()).extracting("email").isEqualTo(email);
         assertThat(userCaptor.getValue()).extracting("password").isEqualTo(passwordEncoded);
         assertThat(userCaptor.getValue()).extracting("role").isSameAs(existingUserRole);

@@ -33,11 +33,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<Product> find(final String search, final boolean strict, final Category category, final Pageable pageable) {
+    public Page<Product> find(final String search, final boolean strict, final UUID categoryId, final Pageable pageable) {
         final boolean hasSearch = search != null && !search.isBlank();
-        final boolean hasCategory = category != null;
+        final boolean hasCategory = categoryId != null;
 
-        final Category categoryFetched = hasCategory ? this.categoryService.get(category.getId()) : null;
+        final Category categoryFetched = hasCategory ? this.categoryService.get(categoryId) : null;
 
         if (!hasSearch) {
             return hasCategory ?
@@ -68,15 +68,17 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     @Override
-    public void create(final Product product) throws ProductAlreadyExistsException {
+    public UUID create(final Product product) throws ProductAlreadyExistsException {
         Assert.notNull(product, "product must not be null");
         assertProductWithNameNotPresent(product.getName());
 
         final Category categoryFetched = product.getCategory() != null ?
                 this.categoryService.get(product.getCategory().getId()) : null;
 
-        final Product newProduct = new Product(product.getName(), categoryFetched);
-        this.productRepository.save(newProduct);
+        Product newProduct = new Product(product.getName(), categoryFetched);
+        newProduct = this.productRepository.save(newProduct);
+
+        return newProduct.getId();
     }
 
     @Transactional

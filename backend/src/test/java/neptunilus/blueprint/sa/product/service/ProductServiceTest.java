@@ -41,13 +41,13 @@ public class ProductServiceTest {
     public void testFind_shouldFindSomeWithoutSearchAndWithoutStrictAndWithoutCategory() {
         String search = null;
         boolean strict = false;
-        Category category = null;
+        UUID categoryId = null;
         Pageable pageable = Pageable.unpaged();
 
         Product existingProduct = new Product("myProduct");
         doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findAll(pageable);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, categoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -72,7 +72,7 @@ public class ProductServiceTest {
         Product existingProduct = new Product("myProduct");
         doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findByCategory(existingCategory, pageable);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, existingCategoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -86,13 +86,13 @@ public class ProductServiceTest {
     public void testFind_shouldFindSomeWithoutSearchAndWithStrictAndWithoutCategory() {
         String search = null;
         boolean strict = true;
-        Category category = null;
+        UUID categoryId = null;
         Pageable pageable = Pageable.unpaged();
 
         Product existingProduct = new Product("myProduct");
         doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findAll(pageable);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, categoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -117,7 +117,7 @@ public class ProductServiceTest {
         Product existingProduct = new Product("myProduct");
         doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findByCategory(existingCategory, pageable);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, existingCategoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -131,13 +131,13 @@ public class ProductServiceTest {
     public void testFind_shouldFindSomeWithSearchAndWithoutStrictAndWithoutCategory() {
         String search = "search";
         boolean strict = false;
-        Category category = null;
+        UUID categoryId = null;
         Pageable pageable = Pageable.unpaged();
 
         Product existingProduct = new Product("myProduct");
         doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository).findByNameContainingIgnoreCase(search, pageable);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, categoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -163,7 +163,7 @@ public class ProductServiceTest {
         doReturn(new PageImpl<>(Collections.singletonList(existingProduct))).when(this.productRepository)
                 .findByNameContainingIgnoreCaseAndCategory(search, existingCategory, pageable);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, existingCategoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -177,13 +177,13 @@ public class ProductServiceTest {
     public void testFind_shouldFindSomeWithSearchAndWithStrictAndWithoutCategory() {
         String search = "search";
         boolean strict = true;
-        Category category = null;
+        UUID categoryId = null;
         Pageable pageable = Pageable.unpaged();
 
         Product existingProduct = new Product("myProduct");
         doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByName(search);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, categoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -208,7 +208,7 @@ public class ProductServiceTest {
         Product existingProduct = new Product("myProduct");
         doReturn(Optional.of(existingProduct)).when(this.productRepository).findOneByNameAndCategory(search, existingCategory);
 
-        Page<Product> page = this.productService.find(search, strict, category, pageable);
+        Page<Product> page = this.productService.find(search, strict, existingCategoryId, pageable);
 
         assertThat(page).hasSize(1);
         assertThat(page).extracting("name").containsExactly("myProduct");
@@ -292,11 +292,17 @@ public class ProductServiceTest {
 
         doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
 
-        this.productService.create(newProduct);
+        Product persistedProduct = new Product(name, existingCategory);
+        persistedProduct.setId(UUID.randomUUID());
+
+        doReturn(persistedProduct).when(this.productRepository).save(any(Product.class));
+
+        UUID newId = this.productService.create(newProduct);
 
         verify(this.productRepository).findOneByName(name);
         verify(this.categoryService).get(categoryId);
         verify(this.productRepository).save(productCaptor.capture());
+        assertThat(newId).isEqualTo(persistedProduct.getId());
         assertThat(productCaptor.getValue()).extracting("name").isEqualTo(name);
         assertThat(productCaptor.getValue()).extracting("category").isSameAs(existingCategory);
         verifyNoMoreInteractions(this.productRepository, this.categoryService);
@@ -311,10 +317,16 @@ public class ProductServiceTest {
 
         doReturn(Optional.empty()).when(this.productRepository).findOneByName(name);
 
-        this.productService.create(newProduct);
+        Product persistedProduct = new Product(name);
+        persistedProduct.setId(UUID.randomUUID());
+
+        doReturn(persistedProduct).when(this.productRepository).save(any(Product.class));
+
+        UUID newId = this.productService.create(newProduct);
 
         verify(this.productRepository).findOneByName(name);
         verify(this.productRepository).save(productCaptor.capture());
+        assertThat(newId).isEqualTo(persistedProduct.getId());
         assertThat(productCaptor.getValue()).extracting("name").isEqualTo(name);
         assertThat(productCaptor.getValue()).extracting("category").isNull();
         verifyNoMoreInteractions(this.productRepository, this.categoryService);

@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void create(final User user) throws UserAlreadyExistsException {
+    public UUID create(final User user) throws UserAlreadyExistsException {
         Assert.notNull(user, "user must not be null");
         assertUserWithEmailNotPresent(user.getEmail());
 
@@ -68,8 +68,10 @@ public class UserServiceImpl implements UserService {
                 this.userRoleService.get(user.getRole().getId()) : null;
         final String passwordEncoded = this.passwordEncoder.encode(user.getPassword());
 
-        final User newUser = new User(user.getEmail(), passwordEncoded, userRoleFetched);
-        this.userRepository.save(newUser);
+        User newUser = new User(user.getEmail(), passwordEncoded, userRoleFetched);
+        newUser = this.userRepository.save(newUser);
+
+        return newUser.getId();
     }
 
     @Transactional

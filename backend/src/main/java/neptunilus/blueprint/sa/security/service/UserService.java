@@ -38,9 +38,10 @@ public interface UserService {
      * Creates a new user.
      *
      * @param user The user to add
+     * @return The id of the new user
      * @throws UserAlreadyExistsException If a user with the given email is already there
      */
-    void create(User user) throws UserAlreadyExistsException;
+    UUID create(User user) throws UserAlreadyExistsException;
 
     /**
      * Updates an existing user.

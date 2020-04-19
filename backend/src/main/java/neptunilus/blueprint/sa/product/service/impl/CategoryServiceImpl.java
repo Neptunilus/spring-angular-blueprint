@@ -51,12 +51,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional
     @Override
-    public void create(final Category category) throws CategoryAlreadyExistsException {
+    public UUID create(final Category category) throws CategoryAlreadyExistsException {
         Assert.notNull(category, "category must not be null");
         assertCategoryWithNameNotPresent(category.getName());
 
-        final Category newCategory = new Category(category.getName());
-        this.categoryRepository.save(newCategory);
+        Category newCategory = new Category(category.getName());
+        newCategory = this.categoryRepository.save(newCategory);
+
+        return newCategory.getId();
     }
 
     @Transactional
