@@ -20,9 +20,6 @@ import static neptunilus.blueprint.sa.security.model.Authority.CREATE_CATEGORY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Tests for {@link UserRepository}.
- */
 @SpringJUnitConfig
 @DataJpaTest
 public class UserRepositoryTest {

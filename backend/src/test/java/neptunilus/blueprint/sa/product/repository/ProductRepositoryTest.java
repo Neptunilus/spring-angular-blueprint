@@ -17,9 +17,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Tests for {@link ProductRepository}.
- */
 @SpringJUnitConfig
 @DataJpaTest
 public class ProductRepositoryTest {
