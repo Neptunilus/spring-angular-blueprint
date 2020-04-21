@@ -1,6 +1,7 @@
 package neptunilus.blueprint.sa.inventory.controller;
 
-import neptunilus.blueprint.sa.inventory.controller.in.ProductRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.ProductCreateRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.ProductUpdateRequest;
 import neptunilus.blueprint.sa.inventory.controller.out.ProductResponse;
 import neptunilus.blueprint.sa.inventory.model.Product;
 import neptunilus.blueprint.sa.inventory.service.ProductService;
@@ -45,7 +46,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody final ProductRequest productRequest) {
+    public ResponseEntity<Void> create(@Valid @RequestBody final ProductCreateRequest productRequest) {
         final Product product = this.modelMapper.map(productRequest, Product.class);
         final UUID id = this.productService.create(product);
 
@@ -56,7 +57,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable final UUID id, @Valid @RequestBody final ProductRequest productRequest) {
+    public ResponseEntity<Void> update(@PathVariable final UUID id, @Valid @RequestBody final ProductUpdateRequest productRequest) {
         final Product update = this.modelMapper.map(productRequest, Product.class);
         this.productService.update(id, update);
 

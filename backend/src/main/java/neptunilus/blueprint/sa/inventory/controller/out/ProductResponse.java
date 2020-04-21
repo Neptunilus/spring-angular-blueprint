@@ -1,14 +1,13 @@
 package neptunilus.blueprint.sa.inventory.controller.out;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import neptunilus.blueprint.sa.inventory.controller.in.CategoryRequest;
 
 import java.util.UUID;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 /**
- * A product representation sent to the outside.
+ * A product response.
  */
 @JsonInclude(NON_NULL)
 public class ProductResponse {

@@ -1,8 +1,9 @@
 package neptunilus.blueprint.sa.security.controller;
 
 import neptunilus.blueprint.sa.common.configuration.MappingConfiguration;
-import neptunilus.blueprint.sa.security.controller.in.UserRequest;
-import neptunilus.blueprint.sa.security.controller.in.UserRoleRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserCreateRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserRoleReferenceRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserUpdateRequest;
 import neptunilus.blueprint.sa.security.controller.out.UserResponse;
 import neptunilus.blueprint.sa.security.controller.out.UserRoleResponse;
 import neptunilus.blueprint.sa.security.model.Authority;
@@ -22,20 +23,6 @@ public class SecurityMapperTest {
     private final ModelMapper securityMapper = new MappingConfiguration().modelMapper();
 
     @Test
-    public void testMap_ShouldMapUserRoleRequestToUserRoleCorrectly() {
-        UUID userRoleId = UUID.randomUUID();
-
-        UserRoleRequest userRoleRequest = new UserRoleRequest();
-        userRoleRequest.setId(userRoleId);
-
-        UserRole userRole = this.securityMapper.map(userRoleRequest, UserRole.class);
-
-        assertThat(userRole).extracting("id").isEqualTo(userRoleId);
-        assertThat(userRole).extracting("name").isNull();
-        assertThat(userRole).extracting("authorities").asInstanceOf(InstanceOfAssertFactories.ITERABLE).isEmpty();
-    }
-
-    @Test
     public void testMap_ShouldMapUserRoleToUserRoleResponseCorrectly() {
         UUID userRoleId = UUID.randomUUID();
         String userRoleName = "userRoleName";
@@ -50,24 +37,48 @@ public class SecurityMapperTest {
     }
 
     @Test
-    public void testMap_ShouldMapUserRequestToUserCorrectly() {
+    public void testMap_ShouldMapUserCreateRequestToUserCorrectly() {
         UUID userRoleId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
+
         String userEmail = "me@mail.xy";
         String userPassword = "password";
 
-        UserRoleRequest userRoleRequest = new UserRoleRequest();
+        UserRoleReferenceRequest userRoleRequest = new UserRoleReferenceRequest();
         userRoleRequest.setId(userRoleId);
 
-        UserRequest userRequest = new UserRequest();
-        userRequest.setId(userId);
+        UserCreateRequest userRequest = new UserCreateRequest();
         userRequest.setEmail(userEmail);
         userRequest.setPassword(userPassword);
         userRequest.setRole(userRoleRequest);
 
         User user = this.securityMapper.map(userRequest, User.class);
 
-        assertThat(user).extracting("id").isEqualTo(userId);
+        assertThat(user).extracting("id").isNull();
+        assertThat(user).extracting("email").isEqualTo(userEmail);
+        assertThat(user).extracting("password").isEqualTo(userPassword);
+        assertThat(user).extracting("role").extracting("id").isEqualTo(userRoleId);
+        assertThat(user).extracting("role").extracting("name").isNull();
+        assertThat(user).extracting("role").extracting("authorities").asInstanceOf(InstanceOfAssertFactories.ITERABLE).isEmpty();
+    }
+
+    @Test
+    public void testMap_ShouldMapUserUpdateRequestToUserCorrectly() {
+        UUID userRoleId = UUID.randomUUID();
+
+        String userEmail = "me@mail.xy";
+        String userPassword = "password";
+
+        UserRoleReferenceRequest userRoleRequest = new UserRoleReferenceRequest();
+        userRoleRequest.setId(userRoleId);
+
+        UserUpdateRequest userRequest = new UserUpdateRequest();
+        userRequest.setEmail(userEmail);
+        userRequest.setPassword(userPassword);
+        userRequest.setRole(userRoleRequest);
+
+        User user = this.securityMapper.map(userRequest, User.class);
+
+        assertThat(user).extracting("id").isNull();
         assertThat(user).extracting("email").isEqualTo(userEmail);
         assertThat(user).extracting("password").isEqualTo(userPassword);
         assertThat(user).extracting("role").extracting("id").isEqualTo(userRoleId);

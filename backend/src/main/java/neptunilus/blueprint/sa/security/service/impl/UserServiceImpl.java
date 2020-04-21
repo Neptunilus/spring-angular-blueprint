@@ -88,8 +88,8 @@ public class UserServiceImpl implements UserService {
             assertUserWithEmailNotPresent(update.getEmail());
         }
 
-        final UserRole newUserRole = update.getRole() != null ?
-                this.userRoleService.get(update.getRole().getId()) : null;
+        final UserRole newUserRole = update.getRole() == null ?
+                existingUser.getRole() : this.userRoleService.get(update.getRole().getId());
         final String passwordEncoded = update.getPassword() == null || update.getPassword().isBlank() ?
                 existingUser.getPassword() : this.passwordEncoder.encode(update.getPassword());
 

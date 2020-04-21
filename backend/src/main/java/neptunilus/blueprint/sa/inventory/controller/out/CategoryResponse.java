@@ -7,7 +7,7 @@ import java.util.UUID;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 /**
- * A category representation sent to the outside.
+ * A category response.
  */
 @JsonInclude(NON_NULL)
 public class CategoryResponse {

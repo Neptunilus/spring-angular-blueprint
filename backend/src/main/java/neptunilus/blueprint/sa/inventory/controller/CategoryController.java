@@ -1,6 +1,7 @@
 package neptunilus.blueprint.sa.inventory.controller;
 
-import neptunilus.blueprint.sa.inventory.controller.in.CategoryRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.CategoryCreateRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.CategoryUpdateRequest;
 import neptunilus.blueprint.sa.inventory.controller.out.CategoryResponse;
 import neptunilus.blueprint.sa.inventory.model.Category;
 import neptunilus.blueprint.sa.inventory.service.CategoryService;
@@ -43,7 +44,7 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody final CategoryRequest categoryRequest) {
+    public ResponseEntity<Void> create(@Valid @RequestBody final CategoryCreateRequest categoryRequest) {
         final Category category = this.modelMapper.map(categoryRequest, Category.class);
         final UUID id = this.categoryService.create(category);
 
@@ -54,7 +55,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable final UUID id, @Valid @RequestBody final CategoryRequest categoryRequest) {
+    public ResponseEntity<Void> update(@PathVariable final UUID id, @Valid @RequestBody final CategoryUpdateRequest categoryRequest) {
         final Category update = this.modelMapper.map(categoryRequest, Category.class);
         this.categoryService.update(id, update);
 

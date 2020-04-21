@@ -1,6 +1,7 @@
 package neptunilus.blueprint.sa.security.controller;
 
-import neptunilus.blueprint.sa.security.controller.in.UserRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserCreateRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserUpdateRequest;
 import neptunilus.blueprint.sa.security.controller.out.UserResponse;
 import neptunilus.blueprint.sa.security.controller.out.UserRoleResponse;
 import neptunilus.blueprint.sa.security.exception.UserAlreadyExistsException;
@@ -228,12 +229,12 @@ public class UserControllerTest {
 
     @Test
     public void testCreate_ShouldReturn409IfUserAlreadyExists() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserCreateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserCreateRequest.class);
 
-        String body = "{ \"email\": \"me@mail.xy\", \"password\": \"password\" }";
+        String body = "{ \"email\": \"me@mail.xy\", \"password\": \"password\", \"role\": { \"id\": \"" + UUID.randomUUID().toString() + "\" }  }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserCreateRequest.class), eq(User.class));
 
         doThrow(new UserAlreadyExistsException(String.format("user with email '%s' already exists", "me@mail.xy")))
                 .when(this.userService).create(user);
@@ -253,7 +254,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(containsStringIgnoringCase("me@mail.xy")));
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         verify(this.userService).create(user);
 
@@ -262,13 +262,13 @@ public class UserControllerTest {
 
     @Test
     public void testCreate_ShouldReturn404IfUserRoleNotFound() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserCreateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserCreateRequest.class);
 
         UUID userRoleId = UUID.randomUUID();
         String body = "{ \"email\": \"me@mail.xy\", \"password\": \"password\", \"role\": { \"id\": \"" + userRoleId + "\" } }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserCreateRequest.class), eq(User.class));
 
         doThrow(new UserRoleNotFoundException(String.format("no user role found with id '%s'", userRoleId)))
                 .when(this.userService).create(user);
@@ -287,7 +287,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no user role found with id '%s'", userRoleId))));
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         assertThat(userRequestCaptor.getValue()).extracting("password").isEqualTo("password");
         assertThat(userRequestCaptor.getValue()).extracting("role").extracting("id").isEqualTo(userRoleId);
@@ -298,7 +297,7 @@ public class UserControllerTest {
 
     @Test
     public void testCreate_ShouldReturn400IfDataIsInvalid() throws Exception {
-        String body = "{ \"email\": \"\", \"password\": \"password\" }";
+        String body = "{ \"email\": \"\", \"password\": \"password\", \"role\": {} }";
 
         this.mockMvc
                 .perform(
@@ -310,18 +309,18 @@ public class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.timestamp").isNotEmpty())
-                .andExpect(jsonPath("$.errors", hasSize(1)))
-                .andExpect(jsonPath("$.errors[0]").value(containsStringIgnoringCase("user email must not be empty")));
+                .andExpect(jsonPath("$.errors", hasSize(2)))
+                .andExpect(jsonPath("$.errors", containsInAnyOrder("referenced user role id must not be null", "user email must not be empty")));
 
         verifyNoInteractions(this.userService, this.modelMapper);
     }
 
     @Test
     public void testCreate_ShouldReturn400IfDataIsInvalidInPersistence() throws Exception {
-        String body = "{ \"email\": \"me@mail.xy\", \"password\": \"password\" }";
+        String body = "{ \"email\": \"me@mail.xy\", \"password\": \"password\", \"role\": { \"id\": \"" + UUID.randomUUID().toString() + "\" } }";
 
         User user = new User("", null, null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserCreateRequest.class), eq(User.class));
 
         doThrow(new DataIntegrityViolationException("invalid"))
                 .when(this.userService).create(user);
@@ -339,7 +338,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors", hasSize(1)))
                 .andExpect(jsonPath("$.errors[0]").value(containsStringIgnoringCase("invalid")));
 
-        verify(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        verify(this.modelMapper).map(any(UserCreateRequest.class), eq(User.class));
         verify(this.userService).create(user);
 
         verifyNoMoreInteractions(this.userService, this.modelMapper);
@@ -347,13 +346,13 @@ public class UserControllerTest {
 
     @Test
     public void testCreate_ShouldCreateIfEverythingIsFine() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserCreateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserCreateRequest.class);
 
         UUID userRoleId = UUID.randomUUID();
         String body = "{ \"email\": \"me@mail.xy\", \"password\": \"password\", \"role\": { \"id\": \"" + userRoleId + "\" } }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserCreateRequest.class), eq(User.class));
 
         UUID newId = UUID.randomUUID();
         doReturn(newId).when(this.userService).create(user);
@@ -371,7 +370,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         assertThat(userRequestCaptor.getValue()).extracting("password").isEqualTo("password");
         assertThat(userRequestCaptor.getValue()).extracting("role").extracting("id").isEqualTo(userRoleId);
@@ -382,13 +380,13 @@ public class UserControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn404IfProductNotFound() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserUpdateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"email\": \"me@mail.xy\", \"password\": \"password\" }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserUpdateRequest.class), eq(User.class));
 
         doThrow(new UserNotFoundException(String.format("no user found with id '%s'", id)))
                 .when(this.userService).update(id, user);
@@ -407,7 +405,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no user found with id '%s'", id))));
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         verify(this.userService).update(id, user);
 
@@ -416,13 +413,13 @@ public class UserControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn409IfNewEmailAlreadyExists() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserUpdateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"email\": \"me@mail.xy\", \"password\": \"password\" }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserUpdateRequest.class), eq(User.class));
 
         doThrow(new UserAlreadyExistsException(String.format("user with email '%s' already exists", "me@mail.xy")))
                 .when(this.userService).update(id, user);
@@ -441,7 +438,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("user with email '%s' already exists", "me@mail.xy"))));
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         verify(this.userService).update(id, user);
 
@@ -497,7 +493,7 @@ public class UserControllerTest {
         String update = "{ \"email\": \"me@mail.xy\", \"password\": \"password\" }";
 
         User user = new User("", "", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserUpdateRequest.class), eq(User.class));
 
         doThrow(new DataIntegrityViolationException("invalid")).when(this.userService).update(id, user);
 
@@ -514,7 +510,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors", hasSize(1)))
                 .andExpect(jsonPath("$.errors[0]").value(containsStringIgnoringCase("invalid")));
 
-        verify(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        verify(this.modelMapper).map(any(UserUpdateRequest.class), eq(User.class));
         verify(this.userService).update(id, user);
 
         verifyNoMoreInteractions(this.userService, this.modelMapper);
@@ -522,14 +518,14 @@ public class UserControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn404IfUserRoleNotFound() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserUpdateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         UUID userRoleId = UUID.randomUUID();
         String update = "{ \"email\": \"me@mail.xy\", \"password\": \"password\", \"role\": { \"id\": \"" + userRoleId + "\" } }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserUpdateRequest.class), eq(User.class));
 
         doThrow(new UserRoleNotFoundException(String.format("no user role found with id '%s'", userRoleId)))
                 .when(this.userService).update(id, user);
@@ -548,7 +544,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no user role found with id '%s'", userRoleId))));
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         assertThat(userRequestCaptor.getValue()).extracting("role").extracting("id").isEqualTo(userRoleId);
         verify(this.userService).update(id, user);
@@ -558,13 +553,13 @@ public class UserControllerTest {
 
     @Test
     public void testUpdate_ShouldUpdateIfEverythingIsFine() throws Exception {
-        ArgumentCaptor<UserRequest> userRequestCaptor = ArgumentCaptor.forClass(UserRequest.class);
+        ArgumentCaptor<UserUpdateRequest> userRequestCaptor = ArgumentCaptor.forClass(UserUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"email\": \"me@mail.xy\", \"password\": \"password\" }";
 
         User user = new User("me@mail.xy", "password", null);
-        doReturn(user).when(this.modelMapper).map(any(UserRequest.class), eq(User.class));
+        doReturn(user).when(this.modelMapper).map(any(UserUpdateRequest.class), eq(User.class));
 
         doNothing().when(this.userService).update(id, user);
 
@@ -580,7 +575,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         verify(this.modelMapper).map(userRequestCaptor.capture(), eq(User.class));
-        assertThat(userRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(userRequestCaptor.getValue()).extracting("email").isEqualTo("me@mail.xy");
         verify(this.userService).update(id, user);
 

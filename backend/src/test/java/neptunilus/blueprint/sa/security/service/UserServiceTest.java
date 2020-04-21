@@ -263,7 +263,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testUpdate_ShouldTriggerUpdateIfUserExistsWithPasswordChange() {
+    public void testUpdate_ShouldTriggerUpdateIfUserExistsWithPasswordChangeAndWithoutNewRole() {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         UUID id = UUID.randomUUID();
@@ -272,15 +272,10 @@ public class UserServiceTest {
         String newEmail = "new@abc.xy";
         String newPassword = "password";
 
-        UUID newUserRoleId = UUID.randomUUID();
-        UserRole newUserRole = new UserRole("role", Collections.emptySet());
-        newUserRole.setId(newUserRoleId);
-
-        User existingUser = new User(email, password, new UserRole("roleOld", Collections.emptySet()));
-        User update = new User(newEmail, newPassword, newUserRole);
-
         UserRole existingUserRole = new UserRole("role", Collections.emptySet());
-        doReturn(existingUserRole).when(this.userRoleService).get(newUserRoleId);
+        User existingUser = new User(email, password, existingUserRole);
+
+        User update = new User(newEmail, newPassword, null);
 
         String newPasswordEncoded = UUID.randomUUID().toString();
         doReturn(newPasswordEncoded).when(this.passwordEncoder).encode(newPassword);
@@ -292,7 +287,6 @@ public class UserServiceTest {
 
         verify(this.userRepository).findById(id);
         verify(this.userRepository).findOneByEmail(newEmail);
-        verify(this.userRoleService).get(newUserRole.getId());
         verify(this.passwordEncoder).encode(newPassword);
         verify(this.userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue()).isSameAs(existingUser);
@@ -303,7 +297,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testUpdate_ShouldTriggerUpdateIfProductExistsWithoutPasswordChange() {
+    public void testUpdate_ShouldTriggerUpdateIfUserRoleExistsWithoutPasswordChange() {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         UUID id = UUID.randomUUID();

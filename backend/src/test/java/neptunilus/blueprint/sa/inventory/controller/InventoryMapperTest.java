@@ -1,8 +1,7 @@
 package neptunilus.blueprint.sa.inventory.controller;
 
 import neptunilus.blueprint.sa.common.configuration.MappingConfiguration;
-import neptunilus.blueprint.sa.inventory.controller.in.CategoryRequest;
-import neptunilus.blueprint.sa.inventory.controller.in.ProductRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.*;
 import neptunilus.blueprint.sa.inventory.controller.out.CategoryResponse;
 import neptunilus.blueprint.sa.inventory.controller.out.ProductResponse;
 import neptunilus.blueprint.sa.inventory.model.Category;
@@ -19,17 +18,28 @@ public class InventoryMapperTest {
     private final ModelMapper inventoryMapper = new MappingConfiguration().modelMapper();
 
     @Test
-    public void testMap_ShouldMapCategoryRequestToCategoryCorrectly() {
-        UUID categoryId = UUID.randomUUID();
+    public void testMap_ShouldMapCategoryCreateRequestToCategoryCorrectly() {
         String categoryName = "categoryName";
 
-        CategoryRequest categoryRequest = new CategoryRequest();
-        categoryRequest.setId(categoryId);
+        CategoryCreateRequest categoryRequest = new CategoryCreateRequest();
         categoryRequest.setName(categoryName);
 
         Category category = this.inventoryMapper.map(categoryRequest, Category.class);
 
-        assertThat(category).extracting("id").isEqualTo(categoryId);
+        assertThat(category).extracting("id").isNull();
+        assertThat(category).extracting("name").isEqualTo(categoryName);
+    }
+
+    @Test
+    public void testMap_ShouldMapCategoryUpdateRequestToCategoryCorrectly() {
+        String categoryName = "categoryName";
+
+        CategoryUpdateRequest categoryRequest = new CategoryUpdateRequest();
+        categoryRequest.setName(categoryName);
+
+        Category category = this.inventoryMapper.map(categoryRequest, Category.class);
+
+        assertThat(category).extracting("id").isNull();
         assertThat(category).extracting("name").isEqualTo(categoryName);
     }
 
@@ -48,27 +58,45 @@ public class InventoryMapperTest {
     }
 
     @Test
-    public void testMap_ShouldMapProductRequestToProductCorrectly() {
+    public void testMap_ShouldMapProductCreateRequestToProductCorrectly() {
         UUID categoryId = UUID.randomUUID();
-        String categoryName = "categoryName";
-        UUID productId = UUID.randomUUID();
+
         String productName = "productName";
 
-        CategoryRequest categoryRequest = new CategoryRequest();
+        CategoryReferenceRequest categoryRequest = new CategoryReferenceRequest();
         categoryRequest.setId(categoryId);
-        categoryRequest.setName(categoryName);
 
-        ProductRequest productRequest = new ProductRequest();
-        productRequest.setId(productId);
+        ProductCreateRequest productRequest = new ProductCreateRequest();
         productRequest.setName(productName);
         productRequest.setCategory(categoryRequest);
 
         Product product = this.inventoryMapper.map(productRequest, Product.class);
 
-        assertThat(product).extracting("id").isEqualTo(productId);
+        assertThat(product).extracting("id").isNull();
         assertThat(product).extracting("name").isEqualTo(productName);
         assertThat(product).extracting("category").extracting("id").isEqualTo(categoryId);
-        assertThat(product).extracting("category").extracting("name").isEqualTo(categoryName);
+        assertThat(product).extracting("category").extracting("name").isNull();
+    }
+
+    @Test
+    public void testMap_ShouldMapProductUpdateRequestToProductCorrectly() {
+        UUID categoryId = UUID.randomUUID();
+
+        String productName = "productName";
+
+        CategoryReferenceRequest categoryRequest = new CategoryReferenceRequest();
+        categoryRequest.setId(categoryId);
+
+        ProductUpdateRequest productRequest = new ProductUpdateRequest();
+        productRequest.setName(productName);
+        productRequest.setCategory(categoryRequest);
+
+        Product product = this.inventoryMapper.map(productRequest, Product.class);
+
+        assertThat(product).extracting("id").isNull();
+        assertThat(product).extracting("name").isEqualTo(productName);
+        assertThat(product).extracting("category").extracting("id").isEqualTo(categoryId);
+        assertThat(product).extracting("category").extracting("name").isNull();
     }
 
     @Test

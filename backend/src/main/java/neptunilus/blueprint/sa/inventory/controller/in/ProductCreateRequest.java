@@ -2,31 +2,23 @@ package neptunilus.blueprint.sa.inventory.controller.in;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 import java.util.UUID;
 
 /**
- * A product representation sent from the outside.
+ * A product create request.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProductRequest {
-
-    private UUID id;
+public class ProductCreateRequest {
 
     @NotEmpty(message = "product name must not be empty")
     @Size(max = 100, message = "product name length must be <= 100")
     private String name;
 
-    private CategoryRequest category;
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public void setId(final UUID id) {
-        this.id = id;
-    }
+    @Valid
+    private CategoryReferenceRequest category;
 
     public String getName() {
         return this.name;
@@ -36,11 +28,11 @@ public class ProductRequest {
         this.name = name;
     }
 
-    public CategoryRequest getCategory() {
+    public CategoryReferenceRequest getCategory() {
         return this.category;
     }
 
-    public void setCategory(final CategoryRequest category) {
+    public void setCategory(final CategoryReferenceRequest category) {
         this.category = category;
     }
 

@@ -1,7 +1,7 @@
 package neptunilus.blueprint.sa.inventory.controller;
 
-import neptunilus.blueprint.sa.inventory.controller.in.CategoryRequest;
-import neptunilus.blueprint.sa.inventory.controller.in.ProductRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.ProductCreateRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.ProductUpdateRequest;
 import neptunilus.blueprint.sa.inventory.controller.out.CategoryResponse;
 import neptunilus.blueprint.sa.inventory.controller.out.ProductResponse;
 import neptunilus.blueprint.sa.inventory.exception.CategoryNotFoundException;
@@ -232,12 +232,12 @@ public class ProductControllerTest {
 
     @Test
     public void testCreate_ShouldReturn409IfProductAlreadyExists() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductCreateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductCreateRequest.class);
 
         String body = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductCreateRequest.class), eq(Product.class));
 
         doThrow(new ProductAlreadyExistsException(String.format("product with name '%s' already exists", "myProduct")))
                 .when(this.productService).create(product);
@@ -257,7 +257,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(containsStringIgnoringCase("myProduct")));
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         assertThat(productRequestCaptor.getValue()).extracting("category").isNull();
         verify(this.productService).create(product);
@@ -267,13 +266,13 @@ public class ProductControllerTest {
 
     @Test
     public void testCreate_ShouldReturn404IfCategoryNotFound() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductCreateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductCreateRequest.class);
 
         UUID categoryId = UUID.randomUUID();
         String body = "{ \"name\": \"myProduct\", \"category\": { \"id\": \"" + categoryId + "\" } }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductCreateRequest.class), eq(Product.class));
 
         doThrow(new CategoryNotFoundException(String.format("no category found with id '%s'", categoryId)))
                 .when(this.productService).create(product);
@@ -292,7 +291,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no category found with id '%s'", categoryId))));
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         assertThat(productRequestCaptor.getValue()).extracting("category").extracting("id").isEqualTo(categoryId);
         verify(this.productService).create(product);
@@ -325,7 +323,7 @@ public class ProductControllerTest {
         String body = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductCreateRequest.class), eq(Product.class));
 
         doThrow(new DataIntegrityViolationException("invalid"))
                 .when(this.productService).create(product);
@@ -343,7 +341,7 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors", hasSize(1)))
                 .andExpect(jsonPath("$.errors[0]").value(equalTo("invalid")));
 
-        verify(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        verify(this.modelMapper).map(any(ProductCreateRequest.class), eq(Product.class));
         verify(this.productService).create(product);
 
         verifyNoMoreInteractions(this.productService, this.modelMapper);
@@ -351,12 +349,12 @@ public class ProductControllerTest {
 
     @Test
     public void testCreate_ShouldCreateIfEverythingIsFine() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductCreateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductCreateRequest.class);
 
         String body = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductCreateRequest.class), eq(Product.class));
 
         UUID newId = UUID.randomUUID();
         doReturn(newId).when(this.productService).create(product);
@@ -374,7 +372,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         verify(this.productService).create(product);
 
@@ -383,13 +380,13 @@ public class ProductControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn404IfProductNotFound() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductUpdateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductUpdateRequest.class), eq(Product.class));
 
         doThrow(new ProductNotFoundException(String.format("no product found with id '%s'", id)))
                 .when(this.productService).update(id, product);
@@ -408,7 +405,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no product found with id '%s'", id))));
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         verify(this.productService).update(id, product);
 
@@ -417,13 +413,13 @@ public class ProductControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn409IfNewNameAlreadyExists() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductUpdateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductUpdateRequest.class), eq(Product.class));
 
         doThrow(new ProductAlreadyExistsException(String.format("product with name '%s' already exists", "myProduct")))
                 .when(this.productService).update(id, product);
@@ -442,7 +438,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("product with name '%s' already exists", "myProduct"))));
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         verify(this.productService).update(id, product);
 
@@ -498,7 +493,7 @@ public class ProductControllerTest {
         String body = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductUpdateRequest.class), eq(Product.class));
 
         doThrow(new DataIntegrityViolationException("invalid"))
                 .when(this.productService).update(id, product);
@@ -516,7 +511,7 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors", hasSize(1)))
                 .andExpect(jsonPath("$.errors[0]").value(equalTo("invalid")));
 
-        verify(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        verify(this.modelMapper).map(any(ProductUpdateRequest.class), eq(Product.class));
         verify(this.productService).update(id, product);
 
         verifyNoMoreInteractions(this.productService, this.modelMapper);
@@ -524,14 +519,14 @@ public class ProductControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn404IfCategoryNotFound() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductUpdateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
         String update = "{ \"name\": \"myProduct\", \"category\": { \"id\": \"" + categoryId + "\" } }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductUpdateRequest.class), eq(Product.class));
 
         doThrow(new CategoryNotFoundException(String.format("no category found with id '%s'", categoryId)))
                 .when(this.productService).update(id, product);
@@ -550,7 +545,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no category found with id '%s'", categoryId))));
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         assertThat(productRequestCaptor.getValue()).extracting("category").extracting("id").isEqualTo(categoryId);
         verify(this.productService).update(id, product);
@@ -560,13 +554,13 @@ public class ProductControllerTest {
 
     @Test
     public void testUpdate_ShouldUpdateIfEverythingIsFine() throws Exception {
-        ArgumentCaptor<ProductRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductRequest.class);
+        ArgumentCaptor<ProductUpdateRequest> productRequestCaptor = ArgumentCaptor.forClass(ProductUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"name\": \"myProduct\" }";
 
         Product product = new Product("myProduct");
-        doReturn(product).when(this.modelMapper).map(any(ProductRequest.class), eq(Product.class));
+        doReturn(product).when(this.modelMapper).map(any(ProductUpdateRequest.class), eq(Product.class));
 
         doNothing().when(this.productService).update(id, product);
 
@@ -582,7 +576,6 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         verify(this.modelMapper).map(productRequestCaptor.capture(), eq(Product.class));
-        assertThat(productRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(productRequestCaptor.getValue()).extracting("name").isEqualTo("myProduct");
         verify(this.productService).update(id, product);
 

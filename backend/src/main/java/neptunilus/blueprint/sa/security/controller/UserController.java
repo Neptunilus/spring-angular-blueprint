@@ -1,7 +1,8 @@
 package neptunilus.blueprint.sa.security.controller;
 
 
-import neptunilus.blueprint.sa.security.controller.in.UserRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserCreateRequest;
+import neptunilus.blueprint.sa.security.controller.in.UserUpdateRequest;
 import neptunilus.blueprint.sa.security.controller.out.UserResponse;
 import neptunilus.blueprint.sa.security.model.User;
 import neptunilus.blueprint.sa.security.service.UserService;
@@ -44,7 +45,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody final UserRequest userRequest) {
+    public ResponseEntity<Void> create(@Valid @RequestBody final UserCreateRequest userRequest) {
         final User user = this.modelMapper.map(userRequest, User.class);
         final UUID id = this.userService.create(user);
 
@@ -55,7 +56,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable final UUID id, @Valid @RequestBody final UserRequest userRequest) {
+    public ResponseEntity<Void> update(@PathVariable final UUID id, @Valid @RequestBody final UserUpdateRequest userRequest) {
         final User update = this.modelMapper.map(userRequest, User.class);
         this.userService.update(id, update);
 

@@ -3,14 +3,16 @@ package neptunilus.blueprint.sa.security.controller.in;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 /**
- * A user role representation sent from the outside.
+ * A user role reference used in requests.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserRoleRequest {
+public class UserRoleReferenceRequest {
 
+    @NotNull(message = "referenced user role id must not be null")
     private UUID id;
 
     public UUID getId() {

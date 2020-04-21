@@ -1,6 +1,7 @@
 package neptunilus.blueprint.sa.inventory.controller;
 
-import neptunilus.blueprint.sa.inventory.controller.in.CategoryRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.CategoryCreateRequest;
+import neptunilus.blueprint.sa.inventory.controller.in.CategoryUpdateRequest;
 import neptunilus.blueprint.sa.inventory.controller.out.CategoryResponse;
 import neptunilus.blueprint.sa.inventory.exception.CategoryAlreadyExistsException;
 import neptunilus.blueprint.sa.inventory.exception.CategoryNotFoundException;
@@ -210,12 +211,12 @@ public class CategoryControllerTest {
 
     @Test
     public void testCreate_ShouldReturn409IfCategoryAlreadyExists() throws Exception {
-        ArgumentCaptor<CategoryRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryRequest.class);
+        ArgumentCaptor<CategoryCreateRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryCreateRequest.class);
 
         String body = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryCreateRequest.class), eq(Category.class));
 
         doThrow(new CategoryAlreadyExistsException(String.format("category with name '%s' already exists", "myCategory")))
                 .when(this.categoryService).create(category);
@@ -235,7 +236,6 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(containsStringIgnoringCase("myCategory")));
 
         verify(this.modelMapper).map(categoryRequestCaptor.capture(), eq(Category.class));
-        assertThat(categoryRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(categoryRequestCaptor.getValue()).extracting("name").isEqualTo("myCategory");
         verify(this.categoryService).create(category);
 
@@ -267,7 +267,7 @@ public class CategoryControllerTest {
         String body = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryCreateRequest.class), eq(Category.class));
 
         doThrow(new DataIntegrityViolationException("invalid"))
                 .when(this.categoryService).create(category);
@@ -285,7 +285,7 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$.errors", hasSize(1)))
                 .andExpect(jsonPath("$.errors[0]").value(equalTo("invalid")));
 
-        verify(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        verify(this.modelMapper).map(any(CategoryCreateRequest.class), eq(Category.class));
         verify(this.categoryService).create(category);
 
         verifyNoMoreInteractions(this.categoryService, this.modelMapper);
@@ -293,12 +293,12 @@ public class CategoryControllerTest {
 
     @Test
     public void testCreate_ShouldCreateIfEverythingIsFine() throws Exception {
-        ArgumentCaptor<CategoryRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryRequest.class);
+        ArgumentCaptor<CategoryCreateRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryCreateRequest.class);
 
         String body = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryCreateRequest.class), eq(Category.class));
 
         UUID newId = UUID.randomUUID();
         doReturn(newId).when(this.categoryService).create(category);
@@ -316,7 +316,6 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         verify(this.modelMapper).map(categoryRequestCaptor.capture(), eq(Category.class));
-        assertThat(categoryRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(categoryRequestCaptor.getValue()).extracting("name").isEqualTo("myCategory");
         verify(this.categoryService).create(category);
 
@@ -325,13 +324,13 @@ public class CategoryControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn404IfCategoryNotFound() throws Exception {
-        ArgumentCaptor<CategoryRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryRequest.class);
+        ArgumentCaptor<CategoryUpdateRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryUpdateRequest.class), eq(Category.class));
 
         doThrow(new CategoryNotFoundException(String.format("no category found with id '%s'", id)))
                 .when(this.categoryService).update(id, category);
@@ -350,7 +349,6 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("no category found with id '%s'", id))));
 
         verify(this.modelMapper).map(categoryRequestCaptor.capture(), eq(Category.class));
-        assertThat(categoryRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(categoryRequestCaptor.getValue()).extracting("name").isEqualTo("myCategory");
         verify(this.categoryService).update(id, category);
 
@@ -359,13 +357,13 @@ public class CategoryControllerTest {
 
     @Test
     public void testUpdate_ShouldReturn409IfNewNameAlreadyExists() throws Exception {
-        ArgumentCaptor<CategoryRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryRequest.class);
+        ArgumentCaptor<CategoryUpdateRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryUpdateRequest.class), eq(Category.class));
 
         doThrow(new CategoryAlreadyExistsException(String.format("category with name '%s' already exists", "myCategory")))
                 .when(this.categoryService).update(id, category);
@@ -384,7 +382,6 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$.errors[0]").value(equalTo(String.format("category with name '%s' already exists", "myCategory"))));
 
         verify(this.modelMapper).map(categoryRequestCaptor.capture(), eq(Category.class));
-        assertThat(categoryRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(categoryRequestCaptor.getValue()).extracting("name").isEqualTo("myCategory");
         verify(this.categoryService).update(id, category);
 
@@ -440,7 +437,7 @@ public class CategoryControllerTest {
         String body = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryUpdateRequest.class), eq(Category.class));
 
         doThrow(new DataIntegrityViolationException("invalid"))
                 .when(this.categoryService).update(id, category);
@@ -458,7 +455,7 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$.errors", hasSize(1)))
                 .andExpect(jsonPath("$.errors[0]").value(equalTo("invalid")));
 
-        verify(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        verify(this.modelMapper).map(any(CategoryUpdateRequest.class), eq(Category.class));
         verify(this.categoryService).update(id, category);
 
         verifyNoMoreInteractions(this.categoryService, this.modelMapper);
@@ -466,13 +463,13 @@ public class CategoryControllerTest {
 
     @Test
     public void testUpdate_ShouldUpdateIfEverythingIsFine() throws Exception {
-        ArgumentCaptor<CategoryRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryRequest.class);
+        ArgumentCaptor<CategoryUpdateRequest> categoryRequestCaptor = ArgumentCaptor.forClass(CategoryUpdateRequest.class);
 
         UUID id = UUID.randomUUID();
         String update = "{ \"name\": \"myCategory\" }";
 
         Category category = new Category("myCategory");
-        doReturn(category).when(this.modelMapper).map(any(CategoryRequest.class), eq(Category.class));
+        doReturn(category).when(this.modelMapper).map(any(CategoryUpdateRequest.class), eq(Category.class));
 
         doNothing().when(this.categoryService).update(id, category);
 
@@ -488,7 +485,6 @@ public class CategoryControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         verify(this.modelMapper).map(categoryRequestCaptor.capture(), eq(Category.class));
-        assertThat(categoryRequestCaptor.getValue()).extracting("id").isNull();
         assertThat(categoryRequestCaptor.getValue()).extracting("name").isEqualTo("myCategory");
         verify(this.categoryService).update(id, category);
 

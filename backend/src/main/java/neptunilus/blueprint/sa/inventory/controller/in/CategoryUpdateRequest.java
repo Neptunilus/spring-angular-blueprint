@@ -7,24 +7,14 @@ import javax.validation.constraints.Size;
 import java.util.UUID;
 
 /**
- * A category representation sent from the outside.
+ * A category update request.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CategoryRequest {
-
-    private UUID id;
+public class CategoryUpdateRequest {
 
     @NotEmpty(message = "category name must not be empty")
     @Size(max = 100, message = "category name length must be <= 100")
     private String name;
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public void setId(final UUID id) {
-        this.id = id;
-    }
 
     public String getName() {
         return this.name;

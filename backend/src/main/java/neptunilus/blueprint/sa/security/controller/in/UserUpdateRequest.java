@@ -3,37 +3,26 @@ package neptunilus.blueprint.sa.security.controller.in;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
-import java.util.UUID;
 
 /**
- * A user representation sent from the outside.
+ * A user update request.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserRequest {
-
-    private UUID id;
+public class UserUpdateRequest {
 
     @Email(message = "user email must be a valid one")
     @NotEmpty(message = "user email must not be empty")
     @Size(max = 100, message = "user email length must be <= 100")
     private String email;
 
-    @NotEmpty(message = "user password must not be empty")
-    @Size(max = 200, message = "user password length must be <= 200")
     private String password;
 
-    private UserRoleRequest role;
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public void setId(final UUID id) {
-        this.id = id;
-    }
+    @Valid
+    private UserRoleReferenceRequest role;
 
     public String getEmail() {
         return this.email;
@@ -51,11 +40,11 @@ public class UserRequest {
         this.password = password;
     }
 
-    public UserRoleRequest getRole() {
+    public UserRoleReferenceRequest getRole() {
         return this.role;
     }
 
-    public void setRole(final UserRoleRequest role) {
+    public void setRole(final UserRoleReferenceRequest role) {
         this.role = role;
     }
 
