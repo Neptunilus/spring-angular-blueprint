@@ -39,4 +39,5 @@ public class UserRoleServiceImpl implements UserRoleService {
         final Optional<UserRole> userRole = this.userRoleRepository.findById(id);
         return userRole.orElseThrow(() -> new UserRoleNotFoundException(String.format("no user role found with id '%s'", id)));
     }
+
 }

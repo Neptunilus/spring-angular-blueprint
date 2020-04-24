@@ -39,4 +39,5 @@ public class UserRoleController {
         final UserRole userRole = this.userRoleService.get(id);
         return this.modelMapper.map(userRole, UserRoleResponse.class);
     }
+
 }

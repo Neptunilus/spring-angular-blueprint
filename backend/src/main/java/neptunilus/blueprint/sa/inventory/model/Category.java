@@ -1,13 +1,21 @@
 package neptunilus.blueprint.sa.inventory.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 import java.util.UUID;
 
+import static lombok.AccessLevel.PROTECTED;
+
 /**
  * A category.
  */
+@Getter @Setter
+@NoArgsConstructor(access = PROTECTED)
 @Entity
 @Table(name = "category")
 public class Category {
@@ -27,27 +35,7 @@ public class Category {
     @Column(unique = true)
     private String name;
 
-    protected Category() {
-        super();
-    }
-
     public Category(final String name) {
-        this.name = name;
-    }
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public void setId(final UUID id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(final String name) {
         this.name = name;
     }
 

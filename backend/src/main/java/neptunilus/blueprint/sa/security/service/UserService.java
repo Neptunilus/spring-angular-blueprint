@@ -5,6 +5,7 @@ import neptunilus.blueprint.sa.security.exception.UserNotFoundException;
 import neptunilus.blueprint.sa.security.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -23,6 +24,7 @@ public interface UserService {
      * @param pageable The pagination information
      * @return The categories
      */
+    @PreAuthorize("hasAuthority('READ_USER')")
     Page<User> find(String search, boolean strict, Pageable pageable);
 
     /**
@@ -32,6 +34,7 @@ public interface UserService {
      * @return The user
      * @throws UserNotFoundException If a user with the given id is not found
      */
+    @PreAuthorize("hasAuthority('READ_USER') or #id == authentication.principal.user.id")
     User get(UUID id) throws UserNotFoundException;
 
     /**
@@ -41,6 +44,7 @@ public interface UserService {
      * @return The id of the new user
      * @throws UserAlreadyExistsException If a user with the given email is already there
      */
+    @PreAuthorize("hasAuthority('CREATE_USER')")
     UUID create(User user) throws UserAlreadyExistsException;
 
     /**
@@ -51,6 +55,7 @@ public interface UserService {
      * @throws UserNotFoundException      If a user with the given id is not found
      * @throws UserAlreadyExistsException If a user with the new email is already there
      */
+    @PreAuthorize("hasAuthority('UPDATE_USER') or #id == authentication.principal.user.id")
     void update(UUID id, User update) throws UserNotFoundException, UserAlreadyExistsException;
 
     /**
@@ -58,6 +63,7 @@ public interface UserService {
      *
      * @param id The id of the user to remove
      */
+    @PreAuthorize("hasAuthority('DELETE_USER')")
     void delete(UUID id);
 
 }

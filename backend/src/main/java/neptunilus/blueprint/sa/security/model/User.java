@@ -1,5 +1,9 @@
 package neptunilus.blueprint.sa.security.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
@@ -7,9 +11,13 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.UUID;
 
+import static lombok.AccessLevel.PROTECTED;
+
 /**
  * A user.
  */
+@Getter @Setter
+@NoArgsConstructor(access = PROTECTED)
 @Entity
 @Table(name = "user")
 public class User {
@@ -45,45 +53,10 @@ public class User {
     @JoinColumn(name = "role_id")
     private UserRole role;
 
-    protected User() {
-        super();
-    }
-
     public User(final String email, final String password, final UserRole role) {
         this.email = email;
         this.password = password;
         this.role = role;
     }
 
-    public UUID getId() {
-        return this.id;
-    }
-
-    public void setId(final UUID id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public void setEmail(final String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
-    }
-
-    public UserRole getRole() {
-        return this.role;
-    }
-
-    public void setRole(final UserRole role) {
-        this.role = role;
-    }
 }

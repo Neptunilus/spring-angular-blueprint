@@ -1,5 +1,6 @@
 package neptunilus.blueprint.sa.inventory.controller;
 
+import neptunilus.blueprint.sa.common.MockedSecurityControllerTest;
 import neptunilus.blueprint.sa.inventory.controller.in.CategoryCreateRequest;
 import neptunilus.blueprint.sa.inventory.controller.in.CategoryUpdateRequest;
 import neptunilus.blueprint.sa.inventory.controller.out.CategoryResponse;
@@ -12,7 +13,6 @@ import org.mockito.ArgumentCaptor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,7 +21,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -37,9 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CategoryController.class)
-@WithMockUser
-@AutoConfigureMockMvc(addFilters = false) // TODO remove
-public class CategoryControllerTest {
+public class CategoryControllerTest extends MockedSecurityControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -28,4 +28,5 @@ public class ApiError {
     public List<String> getErrors() {
         return errors;
     }
+
 }

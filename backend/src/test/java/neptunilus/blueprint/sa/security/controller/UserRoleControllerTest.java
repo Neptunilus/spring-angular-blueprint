@@ -1,5 +1,6 @@
 package neptunilus.blueprint.sa.security.controller;
 
+import neptunilus.blueprint.sa.common.MockedSecurityControllerTest;
 import neptunilus.blueprint.sa.security.controller.out.UserRoleResponse;
 import neptunilus.blueprint.sa.security.exception.UserRoleNotFoundException;
 import neptunilus.blueprint.sa.security.model.UserRole;
@@ -9,7 +10,6 @@ import org.mockito.ArgumentCaptor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
@@ -34,9 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserRoleController.class)
-@WithMockUser
-@AutoConfigureMockMvc(addFilters = false) // TODO remove
-public class UserRoleControllerTest {
+public class UserRoleControllerTest extends MockedSecurityControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

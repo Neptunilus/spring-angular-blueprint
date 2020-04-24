@@ -41,4 +41,5 @@ public abstract class BaseExceptionHandler extends ResponseEntityExceptionHandle
     protected ResponseEntity<ApiError> buildBasicErrorResponse(final HttpStatus httpStatus, final Exception exception) {
         return ResponseEntity.status(httpStatus).body(new ApiError().withError(exception.getMessage()));
     }
+
 }

@@ -4,6 +4,7 @@ import neptunilus.blueprint.sa.security.exception.UserRoleNotFoundException;
 import neptunilus.blueprint.sa.security.model.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -20,6 +21,7 @@ public interface UserRoleService {
      * @param pageable The pagination information
      * @return The user roles
      */
+    @PreAuthorize("hasAuthority('READ_USER_ROLE')")
     Page<UserRole> find(Pageable pageable);
 
     /**
@@ -29,6 +31,7 @@ public interface UserRoleService {
      * @return The user role
      * @throws UserRoleNotFoundException If a user role with the given id is not found
      */
+    @PreAuthorize("hasAuthority('READ_USER_ROLE')")
     UserRole get(UUID id) throws UserRoleNotFoundException;
 
 }

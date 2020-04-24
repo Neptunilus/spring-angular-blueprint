@@ -1,15 +1,16 @@
 package neptunilus.blueprint.sa.inventory.controller.in;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
-import java.util.UUID;
 
 /**
  * A product create request.
  */
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductCreateRequest {
 
@@ -19,21 +20,5 @@ public class ProductCreateRequest {
 
     @Valid
     private CategoryReferenceRequest category;
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(final String name) {
-        this.name = name;
-    }
-
-    public CategoryReferenceRequest getCategory() {
-        return this.category;
-    }
-
-    public void setCategory(final CategoryReferenceRequest category) {
-        this.category = category;
-    }
 
 }

@@ -117,4 +117,5 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistsException(String.format("user with email '%s' already exists", email));
         }
     }
+
 }

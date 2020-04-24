@@ -2,6 +2,7 @@ package neptunilus.blueprint.sa.security.controller.in;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size;
 /**
  * A user update request.
  */
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserUpdateRequest {
 
@@ -23,29 +25,5 @@ public class UserUpdateRequest {
 
     @Valid
     private UserRoleReferenceRequest role;
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public void setEmail(final String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
-    }
-
-    public UserRoleReferenceRequest getRole() {
-        return this.role;
-    }
-
-    public void setRole(final UserRoleReferenceRequest role) {
-        this.role = role;
-    }
 
 }

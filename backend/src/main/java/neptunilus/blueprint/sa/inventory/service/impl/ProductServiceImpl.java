@@ -120,4 +120,5 @@ public class ProductServiceImpl implements ProductService {
             throw new ProductAlreadyExistsException(String.format("product with name '%s' already exists", name));
         }
     }
+
 }

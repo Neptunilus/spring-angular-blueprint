@@ -31,4 +31,5 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
      * @return The categories
      */
     Page<Category> findByNameContainingIgnoreCase(String search, Pageable pageable);
+
 }

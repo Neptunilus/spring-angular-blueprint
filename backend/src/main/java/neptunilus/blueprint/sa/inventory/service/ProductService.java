@@ -5,6 +5,7 @@ import neptunilus.blueprint.sa.inventory.exception.ProductNotFoundException;
 import neptunilus.blueprint.sa.inventory.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -24,6 +25,7 @@ public interface ProductService {
      * @param pageable   The pagination information
      * @return The products
      */
+    @PreAuthorize("hasAuthority('READ_PRODUCT')")
     Page<Product> find(String search, boolean strict, UUID categoryId, Pageable pageable);
 
     /**
@@ -33,6 +35,7 @@ public interface ProductService {
      * @return The product
      * @throws ProductNotFoundException If a product with the given id is not found
      */
+    @PreAuthorize("hasAuthority('READ_PRODUCT')")
     Product get(UUID id) throws ProductNotFoundException;
 
     /**
@@ -42,6 +45,7 @@ public interface ProductService {
      * @return The id of the new product
      * @throws ProductAlreadyExistsException If a product with the given name is already there
      */
+    @PreAuthorize("hasAuthority('CREATE_PRODUCT')")
     UUID create(Product product) throws ProductAlreadyExistsException;
 
     /**
@@ -52,6 +56,7 @@ public interface ProductService {
      * @throws ProductNotFoundException      If a product with the given id is not found
      * @throws ProductAlreadyExistsException If a product with the new name is already there
      */
+    @PreAuthorize("hasAuthority('UPDATE_PRODUCT')")
     void update(UUID id, Product update) throws ProductNotFoundException, ProductAlreadyExistsException;
 
     /**
@@ -59,6 +64,7 @@ public interface ProductService {
      *
      * @param id The id of the product to remove
      */
+    @PreAuthorize("hasAuthority('DELETE_PRODUCT')")
     void delete(UUID id);
 
 }
