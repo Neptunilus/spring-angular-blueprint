@@ -9,12 +9,8 @@ import java.util.List;
  */
 public class ApiError {
 
-    private final LocalDateTime timestamp;
+    private final LocalDateTime timestamp = LocalDateTime.now();
     private final List<String> errors = new LinkedList<>();
-
-    public ApiError() {
-        this.timestamp = LocalDateTime.now();
-    }
 
     public ApiError withError(final String error) {
         this.errors.add(error);
@@ -22,11 +18,11 @@ public class ApiError {
     }
 
     public LocalDateTime getTimestamp() {
-        return timestamp;
+        return this.timestamp;
     }
 
     public List<String> getErrors() {
-        return errors;
+        return this.errors;
     }
 
 }

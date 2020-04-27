@@ -5,6 +5,7 @@ import neptunilus.blueprint.sa.inventory.exception.CategoryNotFoundException;
 import neptunilus.blueprint.sa.inventory.model.Category;
 import neptunilus.blueprint.sa.inventory.repository.CategoryRepository;
 import neptunilus.blueprint.sa.inventory.service.CategoryService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     @Override
     public Page<Category> find(final String search, final boolean strict, final Pageable pageable) {
-        if (search == null || search.isBlank()) {
+        if (StringUtils.isBlank(search)) {
             return this.categoryRepository.findAll(pageable);
         }
         if (strict) {

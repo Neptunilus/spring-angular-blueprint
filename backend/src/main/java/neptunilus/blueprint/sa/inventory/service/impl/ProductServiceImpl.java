@@ -7,6 +7,7 @@ import neptunilus.blueprint.sa.inventory.model.Product;
 import neptunilus.blueprint.sa.inventory.repository.ProductRepository;
 import neptunilus.blueprint.sa.inventory.service.CategoryService;
 import neptunilus.blueprint.sa.inventory.service.ProductService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     @Override
     public Page<Product> find(final String search, final boolean strict, final UUID categoryId, final Pageable pageable) {
-        final boolean hasSearch = search != null && !search.isBlank();
+        final boolean hasSearch = StringUtils.isNotBlank(search);
         final boolean hasCategory = categoryId != null;
 
         final Category categoryFetched = hasCategory ? this.categoryService.get(categoryId) : null;

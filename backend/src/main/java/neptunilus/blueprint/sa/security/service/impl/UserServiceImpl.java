@@ -7,6 +7,7 @@ import neptunilus.blueprint.sa.security.model.UserRole;
 import neptunilus.blueprint.sa.security.repository.UserRepository;
 import neptunilus.blueprint.sa.security.service.UserRoleService;
 import neptunilus.blueprint.sa.security.service.UserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public Page<User> find(final String search, final boolean strict, final Pageable pageable) {
-        if (search == null || search.isBlank()) {
+        if (StringUtils.isBlank(search)) {
             return this.userRepository.findAll(pageable);
         }
         if (strict) {
